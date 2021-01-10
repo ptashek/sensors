@@ -1,0 +1,46 @@
+{
+  "name": "sensors_server",
+  "version": "1.0.0",
+  "title": "Environment Sensors Server",
+  "description": "Environment Sensors Server for IoT sensor data visualisation",
+  "main": "src/server.js",
+  "scripts": {
+    "build": "webpack --config server.webpack.js",
+    "prod-build": "webpack --config prod-server.webpack.js",
+    "dev:server": "nodemon --watch ./build --ext js ./build/server.js",
+    "preprod:server": "npm run prod-build",
+    "prod:server": "forever start ./build/server.js",
+    "lint": "eslint --fix src/**/*.js"
+  },
+  "keywords": [],
+  "author": "lukasz@szmit.eu",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.12.10",
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "content-security-policy": "^0.3.4",
+    "core-js": "^3.8.2",
+    "cors": "^2.8.5",
+    "date-fns": "^2.16.1",
+    "express": "^4.17.0",
+    "express-graphql": "^0.9.0",
+    "graphql": "^14.7.0",
+    "mongoose": "^5.11.11",
+    "regenerator-runtime": "^0.13.7"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "babel-loader": "^8.2.2",
+    "graphql-tools": "^4.0.8",
+    "nodemon": "^2.0.7",
+    "webpack": "^4.45.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "optionalDependencies": {
+    "fsevents": "*",
+    "inotify": "*"
+  }
+}

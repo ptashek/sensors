@@ -1,0 +1,67 @@
+# source: http://localhost/api
+# timestamp: Mon Oct 21 2019 03:18:09 GMT+0100 (Irish Standard Time)
+
+type Query {
+  search(
+    sensor: SensorName, 
+    start: Int, 
+    end: Int, 
+    limit: Int, 
+    sortOrder: SortOrder,
+  ): [SensorData]
+}
+
+type SensorData {
+  id: ID!
+  sensor: SensorName!
+  ts: Float!
+  icon: Icon
+  summary: String
+  temp_c: Float
+  temp_f: Float
+  humidity: Float
+  pressure: Float
+  dewpoint: Float
+  feels_like_c: Float
+  nearest_storm_distance: Float
+  precip_type: PrecipType
+  precip_intensity: Float
+  precip_probability: Float
+  wind_speed: Float
+  wind_gust: Float
+  wind_bearing: Int
+  cloud_cover: Float
+  uv_index: Int
+  visibility: Float
+  ozone: Float
+}
+
+enum SensorName {
+  BME280
+  DARKSKY
+}
+
+enum SortOrder {
+  asc
+  desc
+}
+
+enum PrecipType {
+  none
+  rain
+  snow
+  sleet
+}
+
+enum Icon {
+  clearDay
+  clearNight
+  rain
+  snow
+  sleet
+  wind
+  fog
+  cloudy
+  partlyCloudyDay
+  partlyCloudyNight
+}

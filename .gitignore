@@ -1,0 +1,10 @@
+.DS_Store
+.vscode
+.config
+.git
+build
+node_modules
+__generated__
+package-lock.json
+__pycache__
+*.code-workspace

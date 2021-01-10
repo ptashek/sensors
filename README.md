@@ -7,5 +7,5 @@ It's been runnig great since 2019, collecting close to a milion data points with
 
 License: MIT
 
-![Screenshot](https://gist.github.com/ptashek/9b7c7dcc10662b12b8983e688a13b784?raw=true#file-sensors-jpg "Screenshot")
+![Screenshot](images/sensors.jpg?raw=true "Screenshot")
 

@@ -4,29 +4,14 @@ import math
 import json
 import board
 import busio
-import adafruit_bme280
+from adafruit_bme280 import advanced as adafruit_bme280
 from syslog import syslog
 from urllib.parse import quote_plus
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-from darksky.api import DarkSky
-from darksky.types import languages, units, weather
+from pyowm.owm import OWM
 
-
-# DarkSky setup
-darksky_config = None
-forecast = None
-dt = datetime.now()
-
-try:
-    with open('/etc/sensors/darksky.json', 'r') as f:
-        darksky_config = json.loads(f.read())
-        f.close()
-except Exception as ex:
-    print('DarkSky API setup error: {ex}'.format(ex=ex))
-
-# MongoDB setup
 try:
     with open('/etc/sensors/mongo.json', 'r') as f:
         mongo_config = json.loads(f.read())
@@ -83,30 +68,13 @@ bme280.iir_filter = adafruit_bme280.IIR_FILTER_X2
 #    )
 # )
 
-# Dewpoint formula constants
-DP_B = 17.62
-DP_C = 243.12
-
-
-def get_forecast():
-    if darksky_config:
-        darksky = DarkSky(darksky_config['key'])
-        return darksky.get_forecast(
-            darksky_config['lat'],
-            darksky_config['lon'],
-            extend=False,
-            lang=languages.ENGLISH,  # default `ENGLISH`
-            units=units.SU,  # default `auto`
-            exclude=[
-                weather.MINUTELY,
-                weather.HOURLY,
-                weather.DAILY,
-                weather.ALERTS,
-            ]  # default `[]`
-        )
 
 # Magnus formula dewpoint
 # https://en.wikipedia.org/wiki/Dew_point
+
+# Dewpoint formula constants
+DP_B = 17.62
+DP_C = 243.12
 
 
 def magnus_dp(temp_c, humidity):
@@ -114,7 +82,65 @@ def magnus_dp(temp_c, humidity):
     return (DP_C * gamma) / (DP_B - gamma)
 
 
+def get_openweathermap():
+    owm_config = None
+    owm = None
+
+    try:
+        with open('/etc/sensors/openweathermap.json', 'r') as f:
+            owm_config = json.loads(f.read())
+            owm = OWM(owm_config['key'])
+            f.close()
+    except Exception as ex:
+        print('OpenWeatherMap API setup error: {ex}'.format(ex=ex))
+        return None
+
+    if owm:
+        weather = owm.weather_manager().weather_at_place(
+            owm_config['place']).weather
+        temp = weather.temperature('celsius')
+
+        wind = weather.wind()
+        wind_gust = 0
+        if 'gust' in wind.keys():
+            wind_gust = wind['gust']
+
+        precip_type = 'none'
+        precip_intensity = 0
+        if weather.rain:
+            precip_type = 'rain'
+            precip_intensity = weather.rain['1h']
+        elif weather.snow:
+            precip_type = 'snow'
+            precip_intensity = weather.snow['1h']
+
+        return {
+            'sensor': owm_config['id'],
+            'ts': weather.reference_time(),
+            'units': 'si',
+            'summary': weather.detailed_status,
+            'icon': weather.weather_icon_name,
+            'weather_code': weather.weather_code,
+            'temp_c': temp['temp'],
+            'humidity': weather.humidity,
+            'pressure': weather.pressure['press'],
+            'dewpoint': magnus_dp(temp['temp'], weather.humidity),
+            'feels_like_c': temp['feels_like'],
+            'precip_type': precip_type,
+            'precip_intensity': precip_intensity,
+            'wind_speed': wind['speed'],
+            'wind_gust': wind_gust,
+            'wind_bearing': wind['deg'],
+            'cloud_cover': weather.clouds,
+            'uv_index': weather.uvi,
+            'visibility': weather.visibility_distance
+        }
+
+    return None
+
+
 def measure_and_log():
+    dt = datetime.now()
     temp_c = bme280.temperature
     pressure = bme280.pressure
     humidity = bme280.humidity
@@ -128,44 +154,13 @@ def measure_and_log():
         'pressure': pressure,
         'dewpoint': dewpoint,
     }
-
     data.insert_one(bme280_data_point)
 
 
-    if forecast:
-        external_data_point = {
-            'sensor': 'DARKSKY',
-            'ts': forecast.time.timestamp(),  # meh
-            'units': units.SU,
-            'summary': forecast.summary,
-            'icon': forecast.icon,
-            'temp_c': forecast.temperature,
-            'humidity': forecast.humidity * 100,
-            'pressure': forecast.pressure,
-            'dewpoint': forecast.dew_point,
-            'feels_like_c': forecast.apparent_temperature,
-            'nearest_storm_distance': forecast.nearest_storm_distance,
-            'precip_intensity': forecast.precip_intensity,
-            'precip_probability': forecast.precip_probability,
-            'wind_speed': forecast.wind_speed,
-            'wind_gust': forecast.wind_gust,
-            'cloud_cover': forecast.cloud_cover,
-            'uv_index': forecast.uv_index,
-            'visibility': forecast.visibility,
-            'ozone': forecast.ozone,
-        }
-
-        if forecast.wind_bearing > 0:
-            external_data_point['wind_bearing'] = forecast.wind_bearing
-        else:
-            external_data_point['wind_bearing'] = -1
-
-        if forecast.precip_intensity > 0:
-            external_data_point['precip_type'] = forecast.precip_type
-        else:
-            external_data_point['precip_type'] = 'none'
-
-        data.insert_one(external_data_point)
+    print('Fetching OpenWeatherMap data')
+    owm_data_point = get_openweathermap()
+    if owm_data_point:
+        data.insert_one(owm_data_point)
 
     print('%s\tT: %0.2fC\tH: %0.2f%%\tP: %0.2fhPa' %
           (dt, temp_c, humidity, pressure))
@@ -174,7 +169,4 @@ def measure_and_log():
 
 
 if __name__ == '__main__':
-    if dt.minute % 2 == 0:
-        print('Fetching DarkSky data')
-        forecast = get_forecast().currently
     measure_and_log()

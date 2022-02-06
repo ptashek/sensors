@@ -2,25 +2,17 @@ import React from 'react';
 import { QueryRenderer, graphql } from 'react-relay';
 import { useParams } from 'react-router-dom';
 import { useTable } from 'react-table';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import { makeStyles } from '@material-ui/core/styles';
+import Typography from '@mui/material/Typography';
+import TableContainer from '@mui/material/TableContainer';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import { getPastTimestamp, formatTimestamp } from 'lib/utils';
 import TimestampContext from 'modules/app/components/TimestampContext';
-import ContentWrapper, { Loading } from 'modules/app/components/ContentWrapper';
-import environment from 'modules/relay/environment';
 import sensorConfig from 'modules/data/sensorConfig';
-
-const useStyles = makeStyles((theme) => ({
-  table: {
-    margin: theme.spacing(2),
-    padding: theme.spacing(2),
-  },
-}));
+import environment from 'modules/relay/environment';
 
 const columns = [
   {
@@ -51,82 +43,93 @@ const columns = [
   },
 ];
 
-const ReactTable = React.memo(({ className, data }) => {
+const ReactTable = React.memo(({ data }) => {
   const { getTableProps, headerGroups, rows, prepareRow } = useTable({
     columns,
     data,
   });
 
   return (
-    <Table className={className} {...getTableProps()}>
-      <TableHead>
-        {headerGroups.map((headerGroup) => (
-          <TableRow {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column) => (
-              <TableCell {...column.getHeaderProps()}>{column.render('Header')}</TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableHead>
-      <TableBody>
-        {rows.map((row, i) => {
-          prepareRow(row);
-          return (
-            <TableRow {...row.getRowProps()}>
-              {row.cells.map((cell) => {
-                return <TableCell {...cell.getCellProps()}>{cell.render('Cell')}</TableCell>;
-              })}
+    <TableContainer sx={{ maxHeight: '80vh' }}>
+      <Table {...getTableProps()} sx={{ m: 2 }} stickyHeader>
+        <TableHead>
+          {headerGroups.map((headerGroup) => (
+            <TableRow {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column) => (
+                <TableCell {...column.getHeaderProps()}>{column.render('Header')}</TableCell>
+              ))}
             </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+          ))}
+        </TableHead>
+        <TableBody>
+          {rows.map((row, i) => {
+            prepareRow(row);
+            return (
+              <TableRow {...row.getRowProps()}>
+                {row.cells.map((cell) => {
+                  return <TableCell {...cell.getCellProps()}>{cell.render('Cell')}</TableCell>;
+                })}
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 });
 
-const SensorTable = React.memo(() => {
+const SensorTable = () => {
   const timestamp = React.useContext(TimestampContext);
   const params = useParams();
-  const classes = useStyles();
-  const content = React.useRef(null);
+
+  const sensorName = React.useMemo(
+    () => sensorConfig.find(({ id }) => id === params.id)?.name,
+    [params.id],
+  );
+
   const [start, setStart] = React.useState(
-    getPastTimestamp(10, 'minutes', { startFrom: timestamp }),
+    getPastTimestamp(30, 'minutes', { startFrom: timestamp }),
   );
 
   React.useEffect(() => {
-    setStart(getPastTimestamp(10, 'minutes', { startFrom: timestamp }));
+    setStart(getPastTimestamp(30, 'minutes', { startFrom: timestamp }));
   }, [timestamp]);
 
-  const renderQuery = ({ error, props: relayProps }) => {
+  const renderQuery = React.useCallback(({ error, props: relayProps }) => {
     if (error) {
-      return <ContentWrapper>{error.message}</ContentWrapper>;
+      return error.message;
     }
 
-    if (relayProps?.data) {
-      content.current = <ReactTable className={classes.table} data={relayProps.data} />;
+    if (Array.isArray(relayProps?.data)) {
+      return <ReactTable data={relayProps.data} />;
     }
 
-    return content.current;
-  };
+    return null;
+  }, []);
 
   return (
-    <QueryRenderer
-      environment={environment}
-      query={graphql`
-        query SensorTableQuery($sensor: SensorName!, $start: Int!) {
-          data: search(sensor: $sensor, start: $start, sortOrder: desc) {
-            ts
-            temp_c
-            dewpoint
-            humidity
-            pressure
+    <>
+      <Typography variant="h6" sx={{ m: 2, width: '100%', textAlign: 'center' }}>
+        {sensorName}
+      </Typography>
+      <QueryRenderer
+        environment={environment}
+        query={graphql`
+          query SensorTableQuery($sensor: SensorName!, $start: Int!) {
+            data: search(sensor: $sensor, start: $start, sortOrder: desc) {
+              ts
+              temp_c
+              dewpoint
+              humidity
+              pressure
+            }
           }
-        }
-      `}
-      variables={{ sensor: params.id, start }}
-      render={renderQuery}
-    />
+        `}
+        variables={{ sensor: params.id, start }}
+        render={renderQuery}
+      />
+    </>
   );
-});
+};
 
-export default SensorTable;
+export default React.memo(SensorTable);

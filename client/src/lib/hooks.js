@@ -1,13 +1,8 @@
-// @flow
-import type { KeyValue } from 'lib/types';
 import { useEffect, useRef, useMemo } from 'react';
 
-type useIntervalHook = (() => void, number) => void;
-type useTrendHook = (KeyValue<number>[], string) => -1 | 0 | 1;
-
 // Source: https://overreacted.io/making-setinterval-declarative-with-react-hooks/
-export const useInterval: useIntervalHook = (callback, delay) => {
-  const savedCallback = useRef<() => void>(callback);
+export const useInterval = (callback, delay) => {
+  const savedCallback = useRef(callback);
 
   // Remember the latest callback.
   useEffect(() => {
@@ -28,20 +23,26 @@ export const useInterval: useIntervalHook = (callback, delay) => {
   }, [delay]);
 };
 
-export const useTrend: useTrendHook = (data, propName) => {
-  return useMemo<-1 | 0 | 1>(() => {
-    if (data && propName) {
-      const intercept = data[data.length - 1][propName];
-      const trend = (data[0][propName] - intercept) / data.length;
+export const useTrend = (data, propName) => {
+  return (
+    (useMemo < -1) |
+    0 |
+    (1 >
+      (() => {
+        if (data && propName) {
+          const intercept = data[data.length - 1][propName];
+          const trend = (data[0][propName] - intercept) / data.length;
 
-      if (trend > 0) {
-        return 1;
-      }
+          if (trend > 0) {
+            return 1;
+          }
 
-      if (trend < 0) {
-        return -1;
-      }
-    }
-    return 0;
-  }, [data, propName]);
+          if (trend < 0) {
+            return -1;
+          }
+        }
+        return 0;
+      },
+      [data, propName]))
+  );
 };

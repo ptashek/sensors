@@ -1,6 +1,5 @@
-// @flow
 import React from 'react';
-const TimestampContext = React.createContext<?Date>();
+const TimestampContext = React.createContext();
 
 TimestampContext.displayName = 'TimestampContext';
 export default TimestampContext;

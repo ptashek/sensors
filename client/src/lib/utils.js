@@ -1,26 +1,15 @@
-// @flow
 import { fromUnixTime, subMinutes, subHours, subDays, getUnixTime } from 'date-fns';
 import { utcToZonedTime, format } from 'date-fns-tz';
 
-type LookbackUnit = 'days' | 'hours' | 'minutes';
+const timeZone = 'Europe/Dublin';
 
-type LookbackOptions = {
-  startFrom?: Date,
-  asDate?: boolean,
-};
-
-type getPastTimestampFunc = (number, LookbackUnit, LookbackOptions) => Date | number;
-type formatTimestampFunc = (number, formatString?: string) => string;
-
-export const timeZone: string = 'Europe/Dublin';
-
-export const getPastTimestamp: getPastTimestampFunc = (
+export const getPastTimestamp = (
   lookbackSize,
   lookbackUnit,
   options = { startFrom: new Date(), asDate: false },
 ) => {
-  const timestamp: Date = options?.startFrom || new Date();
-  let result: Date | number;
+  const timestamp = options?.startFrom || new Date();
+  let result;
 
   switch (lookbackUnit) {
     default:
@@ -43,11 +32,28 @@ export const getPastTimestamp: getPastTimestampFunc = (
   return getUnixTime(result);
 };
 
-export const formatTimestamp: formatTimestampFunc = (
-  timestamp,
-  formatString = 'yyyy/MM/dd HH:mm z',
-) => {
+export const formatTimestamp = (timestamp, formatString = 'yyyy/MM/dd HH:mm z') => {
   const utcTS = fromUnixTime(timestamp);
   const zonedTS = utcToZonedTime(utcTS, timeZone);
   return format(zonedTS, formatString, { timeZone });
+};
+
+export const percentile = (values, p) => {
+  /*
+    Highcharts provides numeric-only values, 
+    unless the hasNulls property is set to true
+  */
+  let numValues;
+  if (values.hasNulls) {
+    numValues = values.filter((value) => value !== null);
+  } else {
+    numValues = values;
+  }
+
+  if (numValues.length === 0) {
+    return null;
+  }
+
+  const pIndex = Math.ceil(p * 0.01 * numValues.length) - 1;
+  return numValues.sort()[pIndex];
 };

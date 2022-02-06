@@ -16,6 +16,7 @@ type SensorData {
   sensor: SensorName!
   ts: Float!
   icon: Icon
+  weather_code: Int
   summary: String
   temp_c: Float
   temp_f: Float
@@ -38,7 +39,7 @@ type SensorData {
 
 enum SensorName {
   BME280
-  DARKSKY
+  OWM
 }
 
 enum SortOrder {
@@ -54,14 +55,24 @@ enum PrecipType {
 }
 
 enum Icon {
-  clearDay
-  clearNight
-  rain
-  snow
-  sleet
-  wind
-  fog
-  cloudy
-  partlyCloudyDay
-  partlyCloudyNight
+  # Reference:
+  # https://openweathermap.org/weather-conditions
+  owm01d
+  owm01n
+  owm02d
+  owm02n
+  owm03d
+  owm03n
+  owm04d
+  owm04n
+  owm09d
+  owm09n
+  owm10d
+  owm10n
+  owm11d
+  owm11n
+  owm13d
+  owm13n
+  owm50d
+  owm50n
 }

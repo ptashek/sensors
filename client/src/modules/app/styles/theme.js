@@ -1,25 +1,25 @@
 import 'typeface-roboto';
-import colors from '@workday/canvas-colors-web';
-import { createMuiTheme, getContrastText, responsiveFontSizes } from '@material-ui/core/styles';
+import canvasColors from '@workday/canvas-colors-web';
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-const theme: Theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     primary: {
-      light: colors.cappuccino200,
-      main: colors.cappuccino400,
-      dark: colors.cappuccino600,
+      light: canvasColors.cappuccino200,
+      main: canvasColors.cappuccino400,
+      dark: canvasColors.cappuccino600,
     },
     secondary: {
-      light: colors.coconut200,
-      main: colors.coconut400,
-      dark: colors.coconut600,
+      light: canvasColors.coconut200,
+      main: canvasColors.coconut400,
+      dark: canvasColors.coconut600,
     },
     error: {
-      light: colors.cinnamon400,
-      main: colors.cinnamon500,
-      dark: colors.cinnamon600,
+      light: canvasColors.cinnamon400,
+      main: canvasColors.cinnamon500,
+      dark: canvasColors.cinnamon600,
     },
-    colors,
+    colors: canvasColors,
   },
 });
 

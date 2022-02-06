@@ -1,0 +1,7 @@
+__generated__
+node_modules
+build
+schema
+*.html
+*.graphql
+*.json

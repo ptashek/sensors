@@ -1,43 +1,80 @@
 import React from 'react';
-import { graphql, useFragment } from 'react-relay/hooks';
-import Typography from '@material-ui/core/Typography';
+import { graphql, QueryRenderer } from 'react-relay';
+import Grid from '@mui/material/Grid';
 import { useTrend } from 'lib/hooks';
 import SensorData from 'modules/data/components/SensorData';
 import TrendArrow from 'modules/data/components/TrendArrow';
+import environment from 'modules/relay/environment';
 
-const BME280 = React.memo((props) => {
-  const data = useFragment(
-    graphql`
-      fragment BME280_data on SensorData @relay(plural: true) {
-        ts
-        sensor
-        temp_c
-        humidity
-        pressure
-      }
-    `,
-    props.data,
-  );
-
+const Sensor = ({ title, data }) => {
   const tempTrend = useTrend(data, 'temp_c');
   const humidityTrend = useTrend(data, 'humidity');
+  const pressureTrend = useTrend(data, 'pressure');
+  const dewpointTrend = useTrend(data, 'dewpoint');
 
-  const { title } = props;
-  const { ts, sensor, temp_c, humidity, pressure } = data[0];
+
+  const { ts, sensor, temp_c, humidity, pressure, dewpoint } = data[0];
 
   return (
     <SensorData sensor={sensor} title={title} ts={ts}>
-      <Typography variant="body2">
-        Temperature: {parseFloat(temp_c).toFixed(1)}&deg;C
+      <div>
+        Temperature: {parseFloat(temp_c).toFixed(1)}
+        &deg;C
         <TrendArrow trend={tempTrend} />
-      </Typography>
-      <Typography variant="body2">
+      </div>
+      <div>
+        Dewpoint: {parseFloat(dewpoint).toFixed(1)}&deg;C
+        <TrendArrow trend={dewpointTrend} />
+      </div>
+      <div>
         Humidity: {parseFloat(humidity).toFixed(1)} %RH
         <TrendArrow trend={humidityTrend} />
-      </Typography>
-      <Typography variant="body2">Pressure: {parseFloat(pressure).toFixed(0)} HPa</Typography>
+      </div>
+      <div>
+        Pressure: {parseFloat(pressure).toFixed(0)} HPa
+        <TrendArrow trend={pressureTrend} />
+      </div>
     </SensorData>
   );
-});
+};
 
-export default BME280;
+const BME280 = ({ title, start }) => {
+  const renderQuery = React.useCallback(
+    ({ error, props: relayProps }) => {
+      if (error) {
+        return error.message;
+      }
+
+      const data = relayProps?.data;
+
+      if (!Array.isArray(data)) {
+        return null;
+      }
+
+      return <Sensor title={title} data={data} />;
+    },
+    [title],
+  );
+
+  return (
+    <QueryRenderer
+      environment={environment}
+      query={graphql`
+        query BME280Query($start: Int!) {
+          data: search(sensor: BME280, start: $start, sortOrder: asc, limit: 3) {
+            ts
+            sensor
+            temp_c
+            humidity
+            pressure
+            dewpoint
+          }
+        }
+      `}
+      variables={{ start }}
+      render={renderQuery}
+    />
+  );
+};
+
+export default React.memo(BME280);

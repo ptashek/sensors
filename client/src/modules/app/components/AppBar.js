@@ -1,59 +1,37 @@
-// @flow
-import type { ComponentType } from 'react';
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import MUIAppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import SpeedIcon from '@material-ui/icons/Speed';
-import Link from '@material-ui/core/Link';
+import MUIAppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import SpeedIcon from '@mui/icons-material/Speed';
+import Link from '@mui/material/Link';
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-  },
-  menuButton: {
-    marginRight: theme.spacing(2),
-  },
-  title: {
-    flexGrow: 1,
-  },
-}));
+const forceReload = () => window.location.reload(true);
 
-const forceReload: () => void = () => window.location.reload(true);
-
-const AppBar = React.memo<void, typeof MUIAppBar>(() => {
-  const classes = useStyles();
-
+const AppBar = () => {
   return (
-    <MUIAppBar className={classes.root} position="sticky">
+    <MUIAppBar position="sticky" sx={{ flexGrow: 1 }}>
       <Toolbar variant="dense">
         <IconButton
           edge="start"
-          className={classes.menuButton}
           color="inherit"
           aria-label="menu"
           onClick={forceReload}
+          sx={{ mr: 2 }}
         >
           <SpeedIcon />
         </IconButton>
-        <Typography variant="h6" className={classes.title} noWrap>
+        <Typography variant="h6" sx={{ flexGrow: 1 }} noWrap>
           Sensors
         </Typography>
         <Typography variant="body2">
-          <Link
-            href="https://darksky.net/poweredby/"
-            color="inherit"
-            rel="noopener"
-            target="_blank"
-          >
-            Powered by Dark Sky
+          <Link href="https://openweathermap.org/" color="inherit" rel="noopener" target="_blank">
+            Powered by OpenWeatherMap
           </Link>
         </Typography>
       </Toolbar>
     </MUIAppBar>
   );
-});
+};
 
-export default AppBar;
+export default React.memo(AppBar);

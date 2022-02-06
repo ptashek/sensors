@@ -1,26 +1,18 @@
-// @flow
-import type { ComponentType } from 'react';
-import { Component } from 'react';
-import React, { Suspense } from 'react';
+import React from 'react';
 import { HashRouter, Route, Switch } from 'react-router-dom';
-import { ThemeProvider } from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Grid from '@mui/material/Grid';
 import { useInterval } from 'lib/hooks';
 import TimestampContext from 'modules/app/components/TimestampContext';
 import AppBar from 'modules/app/components/AppBar';
 import SensorList from 'modules/data/components/SensorList';
+import SensorChart from 'modules/data/components/SensorChart';
+import SensorTable from 'modules/data/components/SensorTable';
 import theme from 'modules/app/styles/theme';
 
-const SensorTable = React.lazy<ComponentType<void>>(() =>
-  import('modules/data/components/SensorTable'),
-);
-const SensorChart = React.lazy<ComponentType<void>>(() =>
-  import('modules/data/components/SensorChart'),
-);
-
-const App: ComponentType<void> = () => {
-  const [timestamp, setTimestamp] = React.useState<Date>(new Date());
-
+const App = () => {
+  const [timestamp, setTimestamp] = React.useState(new Date());
   useInterval(() => setTimestamp(new Date()), 60000);
 
   return (
@@ -29,13 +21,17 @@ const App: ComponentType<void> = () => {
       <ThemeProvider theme={theme}>
         <AppBar />
         <TimestampContext.Provider value={timestamp}>
-          <SensorList />
-          <Suspense fallback={null}>
-            <Switch>
-              <Route exact path="/sensor/:id/table" component={SensorTable} />
-              <Route exact path="/sensor/:id/chart" component={SensorChart} />
-            </Switch>
-          </Suspense>
+          <Grid container direction="row" spacing={2} justifyContent="space-between" sx={{ p: 2 }}>
+            <Grid item xs={12} sm={6} lg={2.5}>
+              <SensorList />
+            </Grid>
+            <Grid item sm={6} lg={9.5}>
+              <Switch>
+                <Route exact path="/sensor/:id/table" component={SensorTable} />
+                <Route exact path="/sensor/:id/chart" component={SensorChart} />
+              </Switch>
+            </Grid>
+          </Grid>
         </TimestampContext.Provider>
       </ThemeProvider>
     </HashRouter>

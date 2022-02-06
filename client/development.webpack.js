@@ -4,13 +4,14 @@ const path = require('path');
 const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const packageInfo = JSON.parse(fs.readFileSync('./package.json'));
 const supportedLocales = ['en'];
 
 module.exports = {
+  target: 'web',
   context: process.cwd(),
   mode: 'development',
   devtool: 'source-map',
@@ -19,9 +20,9 @@ module.exports = {
   output: {
     path: path.resolve('../server/build/ui'),
     publicPath: '/',
-    filename: '[name].[hash].js',
+    filename: '[name].[contenthash].js',
     pathinfo: true,
-    sourceMapFilename: '[name].[hash].map.js',
+    sourceMapFilename: '[name].[contenthash].map.js',
   },
 
   module: {
@@ -67,17 +68,20 @@ module.exports = {
   optimization: {
     runtimeChunk: 'single',
     splitChunks: {
-      chunks: 'async',
+      chunks: 'all',
       minChunks: 1,
       maxInitialRequests: 4,
       maxAsyncRequests: 6,
     },
     minimizer: [
-      new OptimizeCSSAssetsPlugin({
-        cssProcessorOptions: {
-          discardComments: {
-            removeAll: true,
-          },
+      new CssMinimizerPlugin({
+        minimizerOptions: {
+          preset: [
+            'default',
+            {
+              discardComments: { removeAll: true },
+            },
+          ],
         },
       }),
     ],
@@ -89,7 +93,7 @@ module.exports = {
       new RegExp(/[\/\\](${supportedLocales.join('|')})[\/\\]/),
     ),
     new HtmlWebpackPlugin({
-      title: `${packageInfo.title} (dev)`,
+      title: packageInfo.title,
       filename: path.resolve('../server/build/ui/index.html'),
       template: path.resolve('./src/index.html'),
       xhtml: true,
@@ -99,7 +103,7 @@ module.exports = {
       },
     }),
     new MiniCssExtractPlugin({
-      filename: '[name].[hash].css',
+      filename: '[name].[contenthash].css',
     }),
     // new BundleAnalyzerPlugin(),
   ],

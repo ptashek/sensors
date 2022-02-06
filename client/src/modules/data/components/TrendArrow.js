@@ -1,41 +1,14 @@
 import React from 'react';
-import classnames from 'classnames';
-import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material/styles';
 
-const useStyles = makeStyles((theme) => ({
-  trendArrow: {
-    marginLeft: theme.spacing(0.5),
-    fontSize: theme.typography.pxToRem(18),
-    color: theme.palette.colors.blueberry400,
-    display: 'inline-block',
-    textAlign: 'center',
-    transition: 'transform 300ms ease-in-out',
-  },
-  trendSteady: {
-    transform: 'rotate(0deg)',
-  },
-  trendUp: {
-    transform: 'rotate(-45deg)',
-  },
-  trendDown: {
-    transform: 'rotate(45deg)',
-  },
+const Arrow = styled('span')(({ theme, trend }) => ({
+  marginLeft: theme.spacing(0.5),
+  display: 'inline-block',
+  textAlign: 'center',
+  transition: 'transform 300ms ease-in-out',
+  transform: `rotate(${45 * -trend}deg)`,
 }));
 
-const TrendArrow = React.memo(({ trend }) => {
-  const classes = useStyles();
+const TrendArrow = ({ trend }) => <Arrow trend={trend}>&#10137;</Arrow>;
 
-  return (
-    <strong
-      className={classnames(classes.trendArrow, {
-        [classes.trendSteady]: trend === 0,
-        [classes.trendUp]: trend > 0,
-        [classes.trendDown]: trend < 0,
-      })}
-    >
-      ↦
-    </strong>
-  );
-});
-
-export default TrendArrow;
+export default React.memo(TrendArrow);

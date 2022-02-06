@@ -15,7 +15,16 @@
         "libraryDirectory": "",
         "camel2DashComponentName": false
       },
-      "core"
+      "mui-core"
+    ],
+    [
+      "babel-plugin-import",
+      {
+        "libraryName": "@mui/lab",
+        "libraryDirectory": "",
+        "camel2DashComponentName": false
+      },
+      "mui-lab"
     ],
     [
       "babel-plugin-import",
@@ -24,8 +33,8 @@
         "libraryDirectory": "",
         "camel2DashComponentName": false
       },
-      "icons"
-    ],
+      "mui-icons"
+    ]
   ],
   "presets": [
     "@babel/preset-react",

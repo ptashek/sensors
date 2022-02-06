@@ -15,7 +15,7 @@ const SensorName = new GraphQLEnumType({
   name: "SensorName",
   values: {
     BME280: { value: "BME280" },
-    DARKSKY: { value: "DARKSKY" }
+    OWM: { value: "OWM" }
   }
 });
 
@@ -32,24 +32,35 @@ const PrecipType = new GraphQLEnumType({
   values: {
     none: { value: "none" },
     rain: { value: "rain" },
-    snow: { value: "snow" },
-    sleet: { value: "sleet" }
+    snow: { value: "snow" }
   }
 });
 
 const Icon = new GraphQLEnumType({
   name: "Icon",
   values: {
-    clearDay: { value: "clear-day" },
-    clearNight: { value: "clear-night" },
-    rain: { value: "rain" },
-    snow: { value: "snow" },
-    sleet: { value: "sleet" },
-    wind: { value: "wind" },
-    fog: { value: "fog" },
-    cloudy: { value: "cloudy" },
-    partlyCloudyDay: { value: "partly-cloudy-day" },
-    partlyCloudyNight: { value: "partly-cloudy-night" }
+    /*
+      Reference:
+      https://openweathermap.org/weather-conditions
+    */
+    owm01d: { value: "01d" },
+    owm01n: { value: "01n" },
+    owm02d: { value: "02d" },
+    owm02n: { value: "02n" },
+    owm03d: { value: "03d" },
+    owm03n: { value: "03n" },
+    owm04d: { value: "04d" },
+    owm04n: { value: "04n" },
+    owm09d: { value: "09d" },
+    owm09n: { value: "09n" },
+    owm10d: { value: "10d" },
+    owm10n: { value: "10n" },
+    owm11d: { value: "11d" },
+    owm11n: { value: "11n" },
+    owm13d: { value: "13d" },
+    owm13n: { value: "13n" },
+    owm50d: { value: "50d" },
+    owm50n: { value: "50n" }
   }
 });
 
@@ -63,9 +74,9 @@ const SensorDataType = new GraphQLObjectType({
     sensor: { type: GraphQLNonNull(SensorName) },
     ts: { type: GraphQLNonNull(GraphQLFloat) },
     icon: { type: Icon },
+    weather_code: { type: GraphQLInt },
     summary: { type: GraphQLString },
     temp_c: { type: GraphQLFloat },
-    temp_f: { type: GraphQLFloat },
     humidity: { type: GraphQLFloat },
     pressure: { type: GraphQLFloat },
     dewpoint: { type: GraphQLFloat },

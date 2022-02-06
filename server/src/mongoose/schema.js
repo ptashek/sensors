@@ -1,6 +1,5 @@
 import { Schema } from 'mongoose';
 
-
 const types = Schema.Types;
 const timestamp = {
   type: types.Number,
@@ -16,9 +15,9 @@ export default new Schema(
     },
     ts: timestamp,
     icon: types.String,
+    weather_code: types.Number,
     summary: types.String,
     temp_c: types.Number,
-    temp_f: types.Number,
     humidity: types.Number,
     pressure: types.Number,
     dewpoint: types.Number,

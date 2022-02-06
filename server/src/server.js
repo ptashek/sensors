@@ -2,9 +2,9 @@ import "core-js/stable";
 import "regenerator-runtime/runtime";
 import path from "path";
 import fs from "fs";
-import express from "express";
+import * as express from "express";
 import compression from "compression";
-import expressGraphQL from "express-graphql";
+import { graphqlHTTP } from 'express-graphql';
 import bodyParser from "body-parser";
 import cors from "cors";
 import csp from "content-security-policy";
@@ -25,15 +25,10 @@ const connect = () => {
     const mongoUri = `mongodb://${host}:${port}`;
 
     return mongoose
-      .createConnection(mongoUri, {
+      .connect(mongoUri, {
         dbName: database,
-        auth: {
-          user: encodeURI(uid),
-          password: encodeURI(pwd),
-        },
-        useUnifiedTopology: true,
-        useNewUrlParser: true,
-        useCreateIndex: true,
+        user: encodeURI(uid),
+        pass: encodeURI(pwd),
         family: 4,
         connectTimeoutMS: 10000,
       })
@@ -53,6 +48,7 @@ connect().then((connection) => {
     csp.getCSP({
       "default-src": csp.SRC_SELF,
       "style-src": [csp.SRC_SELF, csp.SRC_USAFE_INLINE],
+      "img-src": [csp.SRC_SELF, "https://openweathermap.org/img/wn/"]
     })
   );
   app.use(compression());
@@ -66,7 +62,7 @@ connect().then((connection) => {
     "/api",
     cors({ origin: true, methods: "POST" }),
     bodyParser.json(),
-    expressGraphQL({
+    graphqlHTTP({
       schema,
       context: { db: connection },
       graphiql: true,

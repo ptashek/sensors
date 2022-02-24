@@ -1,5 +1,5 @@
-import React from 'react';
-import { QueryRenderer, graphql } from 'react-relay';
+import React, { Suspense } from 'react';
+import { graphql, useQueryLoader, usePreloadedQuery } from 'react-relay';
 import { useParams } from 'react-router-dom';
 import { useTable } from 'react-table';
 import Typography from '@mui/material/Typography';
@@ -11,8 +11,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { getPastTimestamp, formatTimestamp } from 'lib/utils';
 import TimestampContext from 'modules/app/components/TimestampContext';
+import SensorSkeleton from 'modules/app/components/SensorSkeleton';
 import sensorConfig from 'modules/data/sensorConfig';
-import environment from 'modules/relay/environment';
 
 const columns = [
   {
@@ -43,7 +43,21 @@ const columns = [
   },
 ];
 
-const ReactTable = React.memo(({ data }) => {
+const SensorTableQuery = graphql`
+  query SensorTableQuery($sensor: SensorName!, $start: Int!) {
+    data: search(sensor: $sensor, start: $start, sortOrder: desc) {
+      ts
+      temp_c
+      dewpoint
+      humidity
+      pressure
+    }
+  }
+`;
+
+const ReactTable = ({ queryRef }) => {
+  const { data } = usePreloadedQuery(SensorTableQuery, queryRef);
+
   const { getTableProps, headerGroups, rows, prepareRow } = useTable({
     columns,
     data,
@@ -76,11 +90,13 @@ const ReactTable = React.memo(({ data }) => {
       </Table>
     </TableContainer>
   );
-});
+};
 
 const SensorTable = () => {
-  const timestamp = React.useContext(TimestampContext);
   const params = useParams();
+  const content = React.useRef(null);
+  const timestamp = React.useContext(TimestampContext);
+  const [tableDataQuery, loadTableDataQuery] = useQueryLoader(SensorTableQuery);
 
   const sensorName = React.useMemo(
     () => sensorConfig.find(({ id }) => id === params.id)?.name,
@@ -95,39 +111,20 @@ const SensorTable = () => {
     setStart(getPastTimestamp(30, 'minutes', { startFrom: timestamp }));
   }, [timestamp]);
 
-  const renderQuery = React.useCallback(({ error, props: relayProps }) => {
-    if (error) {
-      return error.message;
-    }
+  React.useEffect(() => {
+    loadTableDataQuery({ sensor: params.id, start });
+  }, [start, params.id, loadTableDataQuery]);
 
-    if (Array.isArray(relayProps?.data)) {
-      return <ReactTable data={relayProps.data} />;
-    }
-
-    return null;
-  }, []);
+  if (tableDataQuery != null) {
+    content.current = <ReactTable queryRef={tableDataQuery} />;
+  }
 
   return (
     <>
       <Typography variant="h6" sx={{ m: 2, width: '100%', textAlign: 'center' }}>
         {sensorName}
       </Typography>
-      <QueryRenderer
-        environment={environment}
-        query={graphql`
-          query SensorTableQuery($sensor: SensorName!, $start: Int!) {
-            data: search(sensor: $sensor, start: $start, sortOrder: desc) {
-              ts
-              temp_c
-              dewpoint
-              humidity
-              pressure
-            }
-          }
-        `}
-        variables={{ sensor: params.id, start }}
-        render={renderQuery}
-      />
+      <Suspense fallback={<SensorSkeleton />}>{content.current}</Suspense>
     </>
   );
 };

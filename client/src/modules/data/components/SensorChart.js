@@ -1,13 +1,11 @@
-import React from 'react';
-import { styled, useTheme } from '@mui/material/styles';
-import { QueryRenderer, graphql } from 'react-relay';
+import React, { Suspense } from 'react';
+import { graphql, useQueryLoader, usePreloadedQuery } from 'react-relay';
 import { useParams } from 'react-router-dom';
 import Highcharts from 'highcharts/highstock';
 import {
   HighchartsProvider,
   HighchartsStockChart as HighchartsChart,
   Chart,
-  Title,
   Legend,
   XAxis,
   YAxis,
@@ -19,6 +17,7 @@ import {
   Tooltip as ChartTooltip,
 } from 'react-jsx-highstock';
 import { getUnixTime } from 'date-fns';
+import { styled, useTheme } from '@mui/material/styles';
 import DateTimePicker from '@mui/lab/DateTimePicker';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
@@ -26,7 +25,6 @@ import { Grid, IconButton, TextField, Tooltip, Typography } from '@mui/material'
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import { getPastTimestamp } from 'lib/utils';
 import TimestampContext from 'modules/app/components/TimestampContext';
-import environment from 'modules/relay/environment';
 import sensorConfig from 'modules/data/sensorConfig';
 
 const noop = () => null;
@@ -41,16 +39,81 @@ const plotOptions = {
   },
 };
 
+const SensorChartQuery = graphql`
+  query SensorChartQuery($sensor: SensorName!, $start: Int!, $end: Int!) {
+    data: search(sensor: $sensor, start: $start, end: $end, sortOrder: asc) {
+      ts
+      temp_c
+      feels_like_c
+      humidity
+    }
+  }
+`;
+
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiInputBase-input': {
     padding: theme.spacing(1),
   },
 }));
 
+const ChartData = ({ queryRef }) => {
+  const theme = useTheme();
+
+  const { data } = usePreloadedQuery(SensorChartQuery, queryRef);
+
+  return (
+    <>
+      <YAxis tickInterval={5} minTickInterval={1} id="left" opposite={false}>
+        <YAxis.Title>Temperature &deg;C</YAxis.Title>
+        <AreaSeries
+          yAxis="left"
+          name="Temperature"
+          data={data.map(({ ts, temp_c }) => [ts * 1000, temp_c])}
+          color={theme.palette.colors.plum500}
+          tooltip={{
+            valueDecimals: 1,
+            valueSuffix: '°C',
+          }}
+          animation={false}
+          connectNulls={false}
+        />
+        <AreaSeries
+          yAxis="left"
+          name="Apparent"
+          data={data.map(({ ts, feels_like_c }) => [ts * 1000, feels_like_c])}
+          color={theme.palette.colors.plum200}
+          tooltip={{
+            valueDecimals: 1,
+            valueSuffix: '°C',
+          }}
+          animation={false}
+          connectNulls={false}
+        />
+      </YAxis>
+      <YAxis tickInterval={5} minTickInterval={1} id="right" opposite={true}>
+        <YAxis.Title>Humidity %RH</YAxis.Title>
+        <LineSeries
+          yAxis="right"
+          name="Humidity"
+          data={data.map(({ ts, humidity }) => [ts * 1000, humidity])}
+          color={theme.palette.colors.kiwi400}
+          tooltip={{
+            valueDecimals: 1,
+            valueSuffix: '%',
+          }}
+          animation={false}
+          connectNulls={false}
+        />
+      </YAxis>
+    </>
+  );
+};
+
 const SensorChart = () => {
   const params = useParams();
-  const theme = useTheme();
+  const content = React.useRef(null);
   const timestamp = React.useContext(TimestampContext);
+  const [chartDataQueryRef, loadChartDataQuery] = useQueryLoader(SensorChartQuery);
 
   const [end, setEnd] = React.useState(timestamp);
   const [start, setStart] = React.useState(
@@ -58,19 +121,6 @@ const SensorChart = () => {
   );
 
   const [dateRangeUserDefined, setDateRangeUserDefined] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!dateRangeUserDefined) {
-      setStart(getPastTimestamp(1, 'days', { startFrom: timestamp, asDate: true }));
-      setEnd(timestamp);
-    }
-  }, [timestamp, dateRangeUserDefined]);
-
-  const sensorName = React.useMemo(
-    () => sensorConfig.find(({ id }) => id === params.id)?.name,
-    [params.id],
-  );
-
   const resetDateRange = React.useCallback(() => setDateRangeUserDefined(false), []);
 
   const setStartDate = React.useCallback((value) => {
@@ -83,67 +133,25 @@ const SensorChart = () => {
     setDateRangeUserDefined(true);
   }, []);
 
-  const renderQuery = React.useCallback(
-    ({ error, props: relayProps }) => {
-      if (error) {
-        return <Title>{error.message}</Title>;
-      }
-
-      const data = relayProps?.data;
-
-      if (!Array.isArray(data)) {
-        return <Loading isLoading />;
-      }
-
-      return (
-        <>
-          <YAxis tickInterval={5} minTickInterval={1} id="left" opposite={false}>
-            <YAxis.Title>Temperature &deg;C</YAxis.Title>
-            <AreaSeries
-              yAxis="left"
-              name="Temperature"
-              data={data.map(({ ts, temp_c }) => [ts * 1000, temp_c])}
-              color={theme.palette.colors.plum500}
-              tooltip={{
-                valueDecimals: 1,
-                valueSuffix: '°C',
-              }}
-              animation={false}
-              connectNulls={false}
-            />
-            <AreaSeries
-              yAxis="left"
-              name="Apparent"
-              data={data.map(({ ts, feels_like_c }) => [ts * 1000, feels_like_c])}
-              color={theme.palette.colors.plum200}
-              tooltip={{
-                valueDecimals: 1,
-                valueSuffix: '°C',
-              }}
-              animation={false}
-              connectNulls={false}
-            />
-          </YAxis>
-          <YAxis tickInterval={5} minTickInterval={1} id="right" opposite={true}>
-            <YAxis.Title>Humidity %RH</YAxis.Title>
-            <LineSeries
-              yAxis="right"
-              name="Humidity"
-              data={data.map(({ ts, humidity }) => [ts * 1000, humidity])}
-              color={theme.palette.colors.kiwi400}
-              tooltip={{
-                valueDecimals: 1,
-                valueSuffix: '%',
-              }}
-              animation={false}
-              connectNulls={false}
-            />
-          </YAxis>
-        </>
-      );
-    },
-    [theme.palette.colors],
+  const sensorName = React.useMemo(
+    () => sensorConfig.find(({ id }) => id === params.id)?.name,
+    [params.id],
   );
+
+  React.useEffect(() => {
+    if (!dateRangeUserDefined) {
+      setStart(getPastTimestamp(1, 'days', { startFrom: timestamp, asDate: true }));
+      setEnd(timestamp);
+    }
+  }, [timestamp, dateRangeUserDefined]);
+
+  React.useEffect(() => {
+    loadChartDataQuery({ sensor: params.id, start: getUnixTime(start), end: getUnixTime(end) });
+  }, [start, end, params.id, loadChartDataQuery]);
+
+  if (chartDataQueryRef != null) {
+    content.current = <ChartData queryRef={chartDataQueryRef} />;
+  }
 
   return (
     <>
@@ -218,25 +226,7 @@ const SensorChart = () => {
               All
             </RangeSelector.Button>
           </RangeSelector>
-          <QueryRenderer
-            environment={environment}
-            query={graphql`
-              query SensorChartQuery($sensor: SensorName!, $start: Int!, $end: Int!) {
-                data: search(sensor: $sensor, start: $start, end: $end, sortOrder: asc) {
-                  ts
-                  temp_c
-                  feels_like_c
-                  humidity
-                }
-              }
-            `}
-            variables={{
-              sensor: params.id,
-              start: getUnixTime(start),
-              end: getUnixTime(end),
-            }}
-            render={renderQuery}
-          />
+          <Suspense fallback={<Loading isLoading />}>{content.current}</Suspense>
         </HighchartsChart>
       </HighchartsProvider>
     </>

@@ -1,80 +1,72 @@
-import React from 'react';
-import { graphql, QueryRenderer } from 'react-relay';
-import Grid from '@mui/material/Grid';
-import { useTrend } from 'lib/hooks';
+import React, { Suspense } from 'react';
+import { graphql, useQueryLoader, usePreloadedQuery } from 'react-relay';
+import calculateTrend from 'lib/calculateTrend';
+import SensorSkeleton from 'modules/app/components/SensorSkeleton';
 import SensorData from 'modules/data/components/SensorData';
-import TrendArrow from 'modules/data/components/TrendArrow';
-import environment from 'modules/relay/environment';
+import TrendArrow from 'modules/app/components/TrendArrow';
 
-const Sensor = ({ title, data }) => {
-  const tempTrend = useTrend(data, 'temp_c');
-  const humidityTrend = useTrend(data, 'humidity');
-  const pressureTrend = useTrend(data, 'pressure');
-  const dewpointTrend = useTrend(data, 'dewpoint');
+const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewponit'];
 
+const BME280Query = graphql`
+  query BME280Query($start: Int!) {
+    data: search(sensor: BME280, start: $start, sortOrder: asc, limit: 3) {
+      ts
+      sensor
+      temp_c
+      humidity
+      pressure
+      dewpoint
+    }
+  }
+`;
 
-  const { ts, sensor, temp_c, humidity, pressure, dewpoint } = data[0];
+const Sensor = ({ title, queryRef }) => {
+  const { data } = usePreloadedQuery(BME280Query, queryRef);
+
+  const trend = React.useMemo(() => calculateTrend(data, trendKeys), [data]);
+
+  const { ts, sensor, temp_c, humidity, pressure, dewpoint } = data[data.length - 1];
 
   return (
     <SensorData sensor={sensor} title={title} ts={ts}>
       <div>
         Temperature: {parseFloat(temp_c).toFixed(1)}
         &deg;C
-        <TrendArrow trend={tempTrend} />
+        <TrendArrow trend={trend.temp_c} />
       </div>
       <div>
         Dewpoint: {parseFloat(dewpoint).toFixed(1)}&deg;C
-        <TrendArrow trend={dewpointTrend} />
+        <TrendArrow trend={trend.dewpoint} />
       </div>
       <div>
         Humidity: {parseFloat(humidity).toFixed(1)} %RH
-        <TrendArrow trend={humidityTrend} />
+        <TrendArrow trend={trend.humidity} />
       </div>
       <div>
         Pressure: {parseFloat(pressure).toFixed(0)} HPa
-        <TrendArrow trend={pressureTrend} />
+        <TrendArrow trend={trend.pressure} />
       </div>
     </SensorData>
   );
 };
 
 const BME280 = ({ title, start }) => {
-  const renderQuery = React.useCallback(
-    ({ error, props: relayProps }) => {
-      if (error) {
-        return error.message;
-      }
+  const content = React.useRef(<SensorSkeleton />);
+  const [sensorQueryRef, loadSensorQuery] = useQueryLoader(BME280Query);
 
-      const data = relayProps?.data;
+  React.useEffect(() => {
+    loadSensorQuery({ sensor: 'BME280', start });
+  }, [start, loadSensorQuery]);
 
-      if (!Array.isArray(data)) {
-        return null;
-      }
+  if (sensorQueryRef != null) {
+    content.current = (
+      <Suspense fallback={content.current}>
+        <Sensor title={title} queryRef={sensorQueryRef} />
+      </Suspense>
+    );
+  }
 
-      return <Sensor title={title} data={data} />;
-    },
-    [title],
-  );
-
-  return (
-    <QueryRenderer
-      environment={environment}
-      query={graphql`
-        query BME280Query($start: Int!) {
-          data: search(sensor: BME280, start: $start, sortOrder: asc, limit: 3) {
-            ts
-            sensor
-            temp_c
-            humidity
-            pressure
-            dewpoint
-          }
-        }
-      `}
-      variables={{ start }}
-      render={renderQuery}
-    />
-  );
+  return content.current;
 };
 
 export default React.memo(BME280);

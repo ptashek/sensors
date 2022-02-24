@@ -1,5 +1,4 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
@@ -19,7 +18,6 @@ const StyledLink = React.memo((props) => {
 
 const SensorData = (props) => {
   const { sensor, title, ts, children } = props;
-  const history = useHistory();
   const dateString = formatTimestamp(ts);
 
   return (

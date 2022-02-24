@@ -10,8 +10,15 @@ const DirectionArrow = styled('div')(
 );
 
 const Wind = ({ bearing, speed, unit = 'km/h' }) => (
-  <Grid container item direction="row" spacing={1} xs={4} alignItems="center"
-    justifyContent="center">
+  <Grid
+    container
+    item
+    direction="row"
+    spacing={1}
+    xs={4}
+    alignItems="center"
+    justifyContent="center"
+  >
     <Grid item>
       <DirectionArrow bearing={bearing}>&#10137;</DirectionArrow>
     </Grid>

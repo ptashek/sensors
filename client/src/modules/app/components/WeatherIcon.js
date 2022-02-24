@@ -1,5 +1,4 @@
 import React from 'react';
-import { Image } from 'mui-image';
 
 const weatherIcons = {
   owm01d: 'https://openweathermap.org/img/wn/01d@2x.png',
@@ -24,9 +23,9 @@ const weatherIcons = {
 
 const knownIcons = Object.keys(weatherIcons);
 
-const WeatherIcon = ({ icon, weatherCode }) => {
+const WeatherIcon = ({ icon }) => {
   if (knownIcons.includes(icon)) {
-    return <Image src={weatherIcons[icon]} />;
+    return <img src={weatherIcons[icon]} alt="weather icon" />;
   }
 
   return null;

@@ -9,7 +9,8 @@ import {
   GraphQLNonNull,
   GraphQLString
 } from "graphql";
-import { searchResolver } from "./resolvers";
+import { GraphQLDateTime } from 'graphql-scalars';
+import { searchResolver, aggregateResolver } from "./resolvers";
 
 const SensorName = new GraphQLEnumType({
   name: "SensorName",
@@ -22,8 +23,8 @@ const SensorName = new GraphQLEnumType({
 const SortOrder = new GraphQLEnumType({
   name: "SortOrder",
   values: {
-    asc: { value: "asc" },
-    desc: { value: "desc" }
+    asc: { value: 1 },
+    desc: { value: -1 }
   }
 });
 
@@ -73,6 +74,7 @@ const SensorDataType = new GraphQLObjectType({
     },
     sensor: { type: GraphQLNonNull(SensorName) },
     ts: { type: GraphQLNonNull(GraphQLFloat) },
+    dt: { type: GraphQLNonNull(GraphQLDateTime) },
     icon: { type: Icon },
     weather_code: { type: GraphQLInt },
     summary: { type: GraphQLString },
@@ -101,9 +103,9 @@ const queryType = new GraphQLObjectType({
     search: {
       type: new GraphQLList(SensorDataType),
       args: {
-        sensor: { type: SensorName },
-        start: { type: GraphQLInt },
-        end: { type: GraphQLInt },
+        sensor: { type: GraphQLNonNull(SensorName) },
+        fromDate: { type: GraphQLDateTime },
+        toDate: { type: GraphQLDateTime },
         limit: { type: GraphQLInt },
         sortOrder: { type: SortOrder }
       },

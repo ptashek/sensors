@@ -1,37 +1,37 @@
-import { getUnixTime, startOfDay } from "date-fns";
+import startOfDay from "date-fns/startOfDay";
 import schema from "../mongoose/schema";
 
-const getStartTS = start => {
-  if (start != null) {
-    return start;
+const getFromDate = (fromDate) => {
+  if (fromDate != null) {
+    return new Date(fromDate);
   }
-  return getUnixTime(startOfDay(new Date()));
-};
+  return startOfDay(new Date());
+}
 
-const getEndTS = end => {
-  if (end != null) {
-    return end;
+const getToDate = (toDate) => {
+  if (toDate != null) {
+    return new Date(toDate);
   }
-  return getUnixTime(new Date());
-};
+  return new Date();
+}
 
 export const searchResolver = (args, db) => {
-  const { sensor, start, end, limit, sortOrder = "asc" } = args;
+  const { sensor, fromDate, toDate, limit, sortOrder = "asc" } = args;
   const model = db.model("SensorData", schema, "sensorData");
   let query = model
     .find({})
     .lean()
-    .where("ts")
-    .gte(getStartTS(start))
-    .lte(getEndTS(end));
+    .where("sensor", sensor)
+    .where("dt")
+    .gte(getFromDate(fromDate))
+    .lte(getToDate(toDate))
+    .sort({ dt: sortOrder });
 
-  if (sensor != null) {
-    query = query.where("sensor", sensor);
+  if (limit > 0) {
+    query = query.limit(limit);
   }
 
   return query
-    .sort({ ts: sortOrder })
-    .limit(limit)
     .populate()
     .exec();
 };

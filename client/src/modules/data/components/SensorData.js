@@ -4,7 +4,8 @@ import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
-import { formatTimestamp } from 'lib/utils';
+import { formatDate } from 'lib/utils';
+
 
 const StyledLink = React.memo((props) => {
   const { children, ...linkProps } = props;
@@ -17,8 +18,8 @@ const StyledLink = React.memo((props) => {
 });
 
 const SensorData = (props) => {
-  const { sensor, title, ts, children } = props;
-  const dateString = formatTimestamp(ts);
+  const { sensor, title, dt, children } = props;
+  const dateString = formatDate(dt);
 
   return (
     <Paper

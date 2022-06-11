@@ -10,7 +10,7 @@ const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewponit'];
 const BME280Query = graphql`
   query BME280Query($start: Int!) {
     data: search(sensor: BME280, start: $start, sortOrder: asc, limit: 3) {
-      ts
+      dt
       sensor
       temp_c
       humidity

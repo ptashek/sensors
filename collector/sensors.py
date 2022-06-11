@@ -116,7 +116,8 @@ def get_openweathermap():
 
         return {
             'sensor': owm_config['id'],
-            'ts': weather.reference_time(),
+            'ts': weather.reference_time(timeformat="unix"),
+            'dt': weather.reference_time(timeformat="date").astimezone(),
             'units': 'si',
             'summary': weather.detailed_status,
             'icon': weather.weather_icon_name,
@@ -149,13 +150,13 @@ def measure_and_log():
     bme280_data_point = {
         'sensor': 'BME280',
         'ts': dt.timestamp(),
+        'dt': dt.astimezone(),
         'temp_c': temp_c,
         'humidity': humidity,
         'pressure': pressure,
         'dewpoint': dewpoint,
     }
     data.insert_one(bme280_data_point)
-
 
     print('Fetching OpenWeatherMap data')
     owm_data_point = get_openweathermap()

@@ -14,6 +14,7 @@ export default new Schema(
       select: true,
     },
     ts: timestamp,
+    dt: types.Date,
     icon: types.String,
     weather_code: types.Number,
     summary: types.String,

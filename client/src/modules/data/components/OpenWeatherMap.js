@@ -16,7 +16,7 @@ const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewponit'];
 const OpenWeatherMapQuery = graphql`
   query OpenWeatherMapQuery($start: Int!) {
     data: search(sensor: OWM, start: $start, sortOrder: asc, limit: 3) {
-      ts
+      dt
       sensor
       icon
       weather_code
@@ -40,7 +40,7 @@ const Sensor = ({ title, queryRef }) => {
   const trend = React.useMemo(() => calculateTrend(data, trendKeys), [data]);
 
   const {
-    ts,
+    dt,
     sensor,
     icon,
     weather_code,

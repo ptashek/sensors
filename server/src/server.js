@@ -48,7 +48,7 @@ connect().then((connection) => {
     csp.getCSP({
       "default-src": csp.SRC_SELF,
       "style-src": [csp.SRC_SELF, csp.SRC_USAFE_INLINE],
-      "img-src": [csp.SRC_SELF, "https://openweathermap.org/img/wn/"]
+      "img-src": [csp.SRC_SELF, "https://openweathermap.org/img/wn/"],
     })
   );
   app.use(compression());
@@ -69,7 +69,11 @@ connect().then((connection) => {
     })
   );
 
-  app.listen(appPort, () =>
-    console.log(`Application listening on port ${appPort}`)
-  );
+  app.listen(appPort, (error) => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log(`Application listening on port ${appPort}`)
+    }
+  });
 });

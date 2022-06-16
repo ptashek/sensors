@@ -31,8 +31,7 @@ enum PrecipType {
 }
 
 type Query {
-  aggregate(fromDate: DateTime, limit: Int, sensor: SensorName, sortOrder: SortOrder, toDate: DateTime): [SensorData]
-  search(end: Int, fromDate: DateTime, limit: Int, sensor: SensorName, sortOrder: SortOrder, start: Int, toDate: DateTime): [SensorData]
+  search(fromDate: DateTime, limit: Int, sensor: SensorName!, sortOrder: SortOrder, toDate: DateTime): [SensorData]
 }
 
 type SensorData {

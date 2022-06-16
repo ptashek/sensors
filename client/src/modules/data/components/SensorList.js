@@ -1,24 +1,22 @@
 import React from 'react';
 import Grid from '@mui/material/Grid';
-import { getPastTimestamp } from 'lib/utils';
-import TimestampContext from 'modules/app/components/TimestampContext';
+import { getPastDate } from 'lib/dateUtils';
+import ReferenceDateContext from 'modules/app/components/ReferenceDateContext';
 import sensorConfig from 'modules/data/sensorConfig';
 
 const SensorList = React.memo(() => {
-  const timestamp = React.useContext(TimestampContext);
-  const [start, setStart] = React.useState(
-    getPastTimestamp(10, 'minutes', { startFrom: timestamp }),
-  );
+  const currentDate = React.useContext(ReferenceDateContext);
+  const [fromDate, setFromDate] = React.useState(getPastDate(10, 'minutes', currentDate));
 
   React.useEffect(() => {
-    setStart(getPastTimestamp(10, 'minutes', { startFrom: timestamp }));
-  }, [timestamp]);
+    setFromDate(getPastDate(10, 'minutes', currentDate));
+  }, [currentDate]);
 
   return (
     <Grid container direction="column" justifyContent="space-evenly">
       {sensorConfig.map(({ id, name, Component }) => (
         <Grid item key={id} sx={{ m: 2 }}>
-          <Component title={name} start={start} />
+          <Component title={name} fromDate={fromDate} />
         </Grid>
       ))}
     </Grid>

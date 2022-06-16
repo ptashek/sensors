@@ -23,13 +23,13 @@
     "@date-io/date-fns": "^2.13.1",
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
+    "@fontsource/roboto": "^4.5.7",
     "@mui/icons-material": "^5.3.1",
-    "@mui/lab": "^5.0.0-alpha.67",
     "@mui/material": "^5.4.0",
+    "@mui/x-date-pickers": "^5.0.0-alpha.6",
     "@workday/canvas-colors-web": "^2.0.0",
     "core-js": "^3.8.2",
     "date-fns": "^2.16.1",
-    "date-fns-tz": "^1.0.12",
     "highcharts": "^9.3.3",
     "history": "^5.0.0",
     "react": "^17.0.0",
@@ -39,8 +39,7 @@
     "react-router-dom": "^5.2.0",
     "react-table": "^7.7.0",
     "regenerator-runtime": "^0.13.9",
-    "relay-runtime": "^13.0.2",
-    "typeface-roboto": "^1.1.13"
+    "relay-runtime": "^13.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.10",
@@ -82,15 +81,20 @@
     "null-loader": "^4.0.1",
     "prettier": "^2.5.1",
     "relay-compiler": "^13.2.0",
-    "script-loader": "^0.7.2",
+    "style-loader": "^3.3.1",
     "terser": "^5.5.1",
     "terser-webpack-plugin": "^5.3.1",
     "webpack": "^5.68.0",
-    "webpack-bundle-analyzer": "^4.3.0",
     "webpack-cli": "^4.9.2"
   },
   "optionalDependencies": {
     "fsevents": "*",
     "inotify": "*"
-  }
+  },
+  "browserslist": [
+    "last 2 Chrome major versions",
+    "last 2 Firefox major versions",
+    "last 2 Edge major versions",
+    "Safari >= 14"
+  ]
 }

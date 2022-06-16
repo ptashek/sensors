@@ -11,11 +11,11 @@ import Precipitation from 'modules/app/components/Precipitation';
 import CloudCover from 'modules/app/components/CloudCover';
 import Wind from 'modules/app/components/Wind';
 
-const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewponit'];
+const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewpoint'];
 
 const OpenWeatherMapQuery = graphql`
-  query OpenWeatherMapQuery($start: Int!) {
-    data: search(sensor: OWM, start: $start, sortOrder: asc, limit: 3) {
+  query OpenWeatherMapQuery($fromDate: DateTime!) {
+    data: search(sensor: OWM, fromDate: $fromDate, sortOrder: desc, limit: 3) {
       dt
       sensor
       icon
@@ -54,12 +54,12 @@ const Sensor = ({ title, queryRef }) => {
     precip_intensity,
     wind_speed,
     wind_bearing,
-  } = data[data.length - 1];
+  } = data[0];
 
   const wind_kph = Math.round(parseFloat(wind_speed) * 3.6);
 
   return (
-    <SensorData sensor={sensor} title={title} ts={ts}>
+    <SensorData sensor={sensor} title={title} dt={dt}>
       <Grid container justifyContent="space-between">
         <Grid item>
           <div>
@@ -97,13 +97,13 @@ const Sensor = ({ title, queryRef }) => {
   );
 };
 
-const OpenWeatherMap = ({ title, start }) => {
+const OpenWeatherMap = ({ title, fromDate }) => {
   const content = React.useRef(<SensorSkeleton />);
   const [sensorQueryRef, loadSensorQuery] = useQueryLoader(OpenWeatherMapQuery);
 
   React.useEffect(() => {
-    loadSensorQuery({ sensor: 'OWM', start });
-  }, [start, loadSensorQuery]);
+    loadSensorQuery({ sensor: 'OWM', fromDate: fromDate.toISOString() });
+  }, [fromDate, loadSensorQuery]);
 
   if (sensorQueryRef != null) {
     content.current = (

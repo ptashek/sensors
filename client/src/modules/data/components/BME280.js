@@ -5,11 +5,11 @@ import SensorSkeleton from 'modules/app/components/SensorSkeleton';
 import SensorData from 'modules/data/components/SensorData';
 import TrendArrow from 'modules/app/components/TrendArrow';
 
-const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewponit'];
+const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewpoint'];
 
 const BME280Query = graphql`
-  query BME280Query($start: Int!) {
-    data: search(sensor: BME280, start: $start, sortOrder: asc, limit: 3) {
+  query BME280Query($fromDate: DateTime!) {
+    data: search(sensor: BME280, fromDate: $fromDate, sortOrder: desc, limit: 3) {
       dt
       sensor
       temp_c
@@ -25,10 +25,10 @@ const Sensor = ({ title, queryRef }) => {
 
   const trend = React.useMemo(() => calculateTrend(data, trendKeys), [data]);
 
-  const { ts, sensor, temp_c, humidity, pressure, dewpoint } = data[data.length - 1];
+  const { dt, sensor, temp_c, humidity, pressure, dewpoint } = data[0];
 
   return (
-    <SensorData sensor={sensor} title={title} ts={ts}>
+    <SensorData sensor={sensor} title={title} dt={dt}>
       <div>
         Temperature: {parseFloat(temp_c).toFixed(1)}
         &deg;C
@@ -50,13 +50,13 @@ const Sensor = ({ title, queryRef }) => {
   );
 };
 
-const BME280 = ({ title, start }) => {
+const BME280 = ({ title, fromDate }) => {
   const content = React.useRef(<SensorSkeleton />);
   const [sensorQueryRef, loadSensorQuery] = useQueryLoader(BME280Query);
 
   React.useEffect(() => {
-    loadSensorQuery({ sensor: 'BME280', start });
-  }, [start, loadSensorQuery]);
+    loadSensorQuery({ sensor: 'BME280', fromDate: fromDate.toISOString() });
+  }, [fromDate, loadSensorQuery]);
 
   if (sensorQueryRef != null) {
     content.current = (

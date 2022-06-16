@@ -1,11 +1,11 @@
 const calculateTrend = (data, keys = []) => {
-  if (!data) {
+  if (!data || !Array.isArray(data) || !Array.isArray(keys)) {
     return {};
   }
 
   return keys.reduce((acc, key) => {
-    const intercept = data[data.length - 1][key];
-    const trend = (data[0][key] - intercept) / data.length;
+    const intercept = data[0][key];
+    const trend = (data[data.length - 1][key] - intercept) / data.length;
 
     if (trend > 0) {
       acc[key] = 1;

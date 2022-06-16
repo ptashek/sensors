@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 import { RelayEnvironmentProvider } from 'react-relay';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
+import { getReferenceDate } from 'lib/dateUtils';
 import useInterval from 'lib/hooks/useInterval';
-import TimestampContext from 'modules/app/components/TimestampContext';
+import ReferenceDateContext from 'modules/app/components/ReferenceDateContext';
 import AppBar from 'modules/app/components/AppBar';
 import SensorList from 'modules/data/components/SensorList';
-import SensorChart from 'modules/data/components/SensorChart';
-import SensorTable from 'modules/data/components/SensorTable';
 import environment from 'modules/relay/environment';
 import theme from 'modules/app/styles/theme';
 
+const LazyLoadSensorChart = React.lazy(() => import('modules/data/components/SensorChart'));
+const LazyLoadSensorTable = React.lazy(() => import('modules/data/components/SensorTable'));
+
 const App = () => {
-  const [timestamp, setTimestamp] = React.useState(new Date());
-  useInterval(() => setTimestamp(new Date()), 60000);
+  const [date, setDate] = React.useState(getReferenceDate());
+  useInterval(() => setDate(getReferenceDate()), 60000);
 
   return (
     <HashRouter>
@@ -25,17 +27,19 @@ const App = () => {
         <RelayEnvironmentProvider environment={environment}>
           <Grid container direction="row" spacing={2} justifyContent="space-between" sx={{ p: 2 }}>
             <Grid item xs={12} md={6} lg={3}>
-              <TimestampContext.Provider value={timestamp}>
+              <ReferenceDateContext.Provider value={date}>
                 <SensorList />
-              </TimestampContext.Provider>
+              </ReferenceDateContext.Provider>
             </Grid>
             <Grid item xs={12} md={6} lg={9}>
-              <TimestampContext.Provider value={timestamp}>
-                <Switch>
-                  <Route exact path="/sensor/:id/table" component={SensorTable} />
-                  <Route exact path="/sensor/:id/chart" component={SensorChart} />
-                </Switch>
-              </TimestampContext.Provider>
+              <ReferenceDateContext.Provider value={date}>
+                <Suspense fallback={null}>
+                  <Switch>
+                    <Route exact path="/sensor/:id/table" component={LazyLoadSensorTable} />
+                    <Route exact path="/sensor/:id/chart" component={LazyLoadSensorChart} />
+                  </Switch>
+                </Suspense>
+              </ReferenceDateContext.Provider>
             </Grid>
           </Grid>
         </RelayEnvironmentProvider>

@@ -3,9 +3,7 @@ const webpack = require('webpack');
 const path = require('path');
 const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const packageInfo = JSON.parse(fs.readFileSync('./package.json'));
 const supportedLocales = ['en'];
@@ -23,6 +21,7 @@ module.exports = {
     filename: '[name].[contenthash].js',
     pathinfo: true,
     sourceMapFilename: '[name].[contenthash].map.js',
+    assetModuleFilename: 'assets/[contenthash][ext][query]'
   },
 
   module: {
@@ -33,30 +32,22 @@ module.exports = {
         loader: 'babel-loader',
       },
       {
-        test: /\.(png|jpg|gif|svg)$/,
-        loader: 'file-loader',
-        options: {
-          publicPath: './',
-          useRelativePath: false,
-          name: '[name].[ext]',
-        },
-      },
-      {
-        test: [/roboto.*[179]00(italic)?\.(ttf|woff2?)$/, /\.eot$/, /\.txt$/],
+        test: [/\.(ttf|eot|woff|otf)$/, /\.txt$/],
         loader: 'null-loader',
       },
       {
-        test: /\.(ttf|woff2?)$/,
-        loader: 'file-loader',
-        options: {
-          publicPath: './',
-          useRelativePath: false,
-          name: '[name].[ext]',
-        },
+        test: /\.woff2?$/i,
+        type: 'asset/resource',
+        dependency: { not: ['url'] },
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg|webp)$/,
+        type: 'asset/resource',
+        dependency: { not: ['url'] },
       },
       {
         test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+        use: ['style-loader', 'css-loader'],
       },
     ],
   },
@@ -101,10 +92,6 @@ module.exports = {
         viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no',
         description: packageInfo.description,
       },
-    }),
-    new MiniCssExtractPlugin({
-      filename: '[name].[contenthash].css',
-    }),
-    // new BundleAnalyzerPlugin(),
+    })
   ],
 };

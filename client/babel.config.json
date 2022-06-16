@@ -20,11 +20,11 @@
     [
       "babel-plugin-import",
       {
-        "libraryName": "@mui/lab",
+        "libraryName": "@mui/x-date-pickers",
         "libraryDirectory": "",
         "camel2DashComponentName": false
       },
-      "mui-lab"
+      "mui-date-pickers"
     ],
     [
       "babel-plugin-import",
@@ -43,9 +43,6 @@
       { 
         "corejs": 3,
         "useBuiltIns": "entry",
-        "targets": {
-          "esmodules": true
-        }
       }
     ]
   ]

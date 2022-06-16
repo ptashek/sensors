@@ -28,7 +28,7 @@ function fetchQuery(operation, variables, cacheConfig) {
 
   return Promise.race([
     fetch('/api', requestOptions),
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 60000)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), oneMinute)),
   ])
     .then((response) => response.json())
     .then((json) => {

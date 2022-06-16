@@ -8,3 +8,5 @@ __generated__
 package-lock.json
 __pycache__
 *.code-workspace
+aggregation
+.eslintcache

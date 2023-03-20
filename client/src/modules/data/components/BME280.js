@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { graphql, useQueryLoader, usePreloadedQuery } from 'react-relay';
-import calculateTrend from 'lib/calculateTrend';
+import calculateTrendForKeys from 'lib/calculateTrendForKeys';
 import SensorSkeleton from 'modules/app/components/SensorSkeleton';
 import SensorData from 'modules/data/components/SensorData';
 import TrendArrow from 'modules/app/components/TrendArrow';
@@ -9,7 +9,7 @@ const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewpoint'];
 
 const BME280Query = graphql`
   query BME280Query($fromDate: DateTime!) {
-    data: search(sensor: BME280, fromDate: $fromDate, sortOrder: desc, limit: 3) {
+    data: search(sensor: BME280, fromDate: $fromDate, sortOrder: desc, limit: 5) {
       dt
       sensor
       temp_c
@@ -23,7 +23,7 @@ const BME280Query = graphql`
 const Sensor = ({ title, queryRef }) => {
   const { data } = usePreloadedQuery(BME280Query, queryRef);
 
-  const trend = React.useMemo(() => calculateTrend(data, trendKeys), [data]);
+  const trend = React.useMemo(() => calculateTrendForKeys(data, trendKeys), [data]);
 
   const { dt, sensor, temp_c, humidity, pressure, dewpoint } = data[0];
 

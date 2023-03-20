@@ -5,14 +5,15 @@ const oneMinute = 60 * 1000;
 const cache = new RelayQueryResponseCache({ size: 10, ttl: oneMinute });
 
 function fetchQuery(operation, variables, cacheConfig) {
-  const queryID = operation.text;
-  const isQuery = operation.operationKind === 'query';
+  const { cacheID, operationKind, text: queryText } = operation;
+  const isQuery = operationKind === 'query';
   const forceFetch = cacheConfig && cacheConfig.force;
 
-  // Try to get data from cache on queries
-  const fromCache = cache.get(queryID, variables);
-  if (isQuery && fromCache !== null && !forceFetch) {
-    return fromCache;
+  if (isQuery && !forceFetch) {
+    const fromCache = cache.get(cacheID, variables);
+    if (fromCache !== null) {
+      return fromCache;
+    }
   }
 
   const requestOptions = {
@@ -21,9 +22,10 @@ function fetchQuery(operation, variables, cacheConfig) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      query: operation.text,
+      query: queryText,
       variables,
     }),
+    withCredentials: true,
   };
 
   return Promise.race([
@@ -34,7 +36,7 @@ function fetchQuery(operation, variables, cacheConfig) {
     .then((json) => {
       // Update cache on queries
       if (isQuery && json) {
-        cache.set(queryID, variables, json);
+        cache.set(cacheID, variables, json);
       }
 
       return json;

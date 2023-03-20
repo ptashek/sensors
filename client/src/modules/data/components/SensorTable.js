@@ -2,7 +2,6 @@ import React, { Suspense } from 'react';
 import { graphql, useQueryLoader, usePreloadedQuery } from 'react-relay';
 import { useParams } from 'react-router-dom';
 import { useTable } from 'react-table';
-import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -12,14 +11,13 @@ import TableRow from '@mui/material/TableRow';
 import { getPastDate, formatDate } from 'lib/dateUtils';
 import ReferenceDateContext from 'modules/app/components/ReferenceDateContext';
 import SensorSkeleton from 'modules/app/components/SensorSkeleton';
-import sensorConfig from 'modules/data/sensorConfig';
 
 const columns = [
   {
     Header: 'Date/Time',
     id: 'dt',
     accessor: ({ dt }) => formatDate(new Date(dt)),
-    width: 175,
+    width: '175px',
   },
   {
     Header: () => <span>Temp &deg;C</span>,
@@ -64,7 +62,7 @@ const ReactTable = ({ queryRef }) => {
   });
 
   return (
-    <TableContainer sx={{ maxHeight: '80vh' }}>
+    <TableContainer sx={{ maxHeight: '80vh', overflowX: 'hidden' }}>
       <Table {...getTableProps()} sx={{ m: 2 }} stickyHeader>
         <TableHead>
           {headerGroups.map((headerGroup) => (
@@ -96,16 +94,11 @@ const SensorTable = () => {
   const params = useParams();
   const [tableDataQueryRef, loadTableDataQuery] = useQueryLoader(SensorTableQuery);
 
-  const sensorName = React.useMemo(
-    () => sensorConfig.find(({ id }) => id === params.id)?.name,
-    [params.id],
-  );
-
   const currentDate = React.useContext(ReferenceDateContext);
   const [fromDate, setFromDate] = React.useState(getPastDate(30, 'minutes', currentDate));
 
   React.useEffect(() => {
-    setFromDate(getPastDate(30, 'minutes', currentDate));
+    setFromDate(getPastDate(15, 'minutes', currentDate));
   }, [currentDate]);
 
   React.useEffect(() => {
@@ -113,14 +106,9 @@ const SensorTable = () => {
   }, [fromDate, params.id, loadTableDataQuery]);
 
   return (
-    <>
-      <Typography variant="h6" sx={{ m: 2, width: '100%', textAlign: 'center' }}>
-        {sensorName}
-      </Typography>
-      <Suspense fallback={<SensorSkeleton />}>
-        {tableDataQueryRef && <ReactTable queryRef={tableDataQueryRef} />}
-      </Suspense>
-    </>
+    <Suspense fallback={<SensorSkeleton />}>
+      {tableDataQueryRef && <ReactTable queryRef={tableDataQueryRef} />}
+    </Suspense>
   );
 };
 

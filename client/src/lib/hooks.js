@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Source: https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 export const useInterval = (callback, delay) => {
@@ -21,28 +21,4 @@ export const useInterval = (callback, delay) => {
       return () => clearInterval(id);
     }
   }, [delay]);
-};
-
-export const useTrend = (data, propName) => {
-  return (
-    (useMemo < -1) |
-    0 |
-    (1 >
-      (() => {
-        if (data && propName) {
-          const intercept = data[data.length - 1][propName];
-          const trend = (data[0][propName] - intercept) / data.length;
-
-          if (trend > 0) {
-            return 1;
-          }
-
-          if (trend < 0) {
-            return -1;
-          }
-        }
-        return 0;
-      },
-      [data, propName]))
-  );
 };

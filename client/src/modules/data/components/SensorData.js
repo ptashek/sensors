@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
@@ -19,10 +20,11 @@ const StyledLink = React.memo((props) => {
 const SensorData = (props) => {
   const { sensor, title, dt, children } = props;
   const dateString = formatDate(new Date(dt));
+  const { pathname } = useLocation();
 
   return (
     <Paper
-      elevation={2}
+      elevation={pathname.startsWith(`/sensor/${sensor}/`) ? 4 : 1}
       sx={{
         p: 2,
         maxHeight: (theme) => `calc(100vh - ${theme.spacing(10)})`,

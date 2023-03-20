@@ -1,3 +1,23 @@
+type AggregateData {
+  cloud_cover: Float
+  dewpoint: Float
+  dt: DateTime!
+  feels_like_c: Float
+  humidity: Float
+  id: ID!
+  ozone: Float
+  precip_intensity: Float
+  precip_probability: Float
+  pressure: Float
+  sensor: SensorName!
+  temp_c: Float
+  uv_index: Int
+  visibility: Float
+  wind_bearing: Int
+  wind_gust: Float
+  wind_speed: Float
+}
+
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -31,6 +51,7 @@ enum PrecipType {
 }
 
 type Query {
+  aggregate(bucketCount: Int, fromDate: DateTime, sensor: SensorName!, sortOrder: SortOrder, toDate: DateTime): [AggregateData]
   search(fromDate: DateTime, limit: Int, sensor: SensorName!, sortOrder: SortOrder, toDate: DateTime): [SensorData]
 }
 

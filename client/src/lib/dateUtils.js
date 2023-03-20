@@ -26,4 +26,4 @@ export const getReferenceDate = () => {
   referenceDate.setSeconds(0);
 
   return referenceDate;
-}
+};

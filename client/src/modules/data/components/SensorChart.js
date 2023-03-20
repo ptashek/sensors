@@ -13,18 +13,18 @@ import {
   LineSeries,
   Loading,
   Navigator,
-  RangeSelector,
   Tooltip as ChartTooltip,
 } from 'react-jsx-highstock';
 import { styled, useTheme } from '@mui/material/styles';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Grid, IconButton, TextField, Tooltip, Typography } from '@mui/material';
+import { Grid, Button, ButtonGroup, FormControlLabel, Switch, TextField } from '@mui/material';
 import RotateLeftIcon from '@mui/icons-material/RotateLeft';
+import FindInPageIcon from '@mui/icons-material/FindInPage';
 import { getPastDate } from 'lib/dateUtils';
 import ReferenceDateContext from 'modules/app/components/ReferenceDateContext';
-import sensorConfig from 'modules/data/sensorConfig';
+import { useInterval } from '../../../lib/hooks';
 
 const noop = () => null;
 
@@ -37,7 +37,7 @@ const plotOptions = {
 
 const SensorChartQuery = graphql`
   query SensorChartQuery($sensor: SensorName!, $fromDate: DateTime!, $toDate: DateTime!) {
-    data: search(sensor: $sensor, fromDate: $fromDate, toDate: $toDate, sortOrder: asc) {
+    data: aggregate(sensor: $sensor, fromDate: $fromDate, toDate: $toDate, sortOrder: asc) {
       dt
       temp_c
       feels_like_c
@@ -105,7 +105,7 @@ const ChartData = ({ queryRef }) => {
 };
 
 const SensorChart = () => {
-  const params = useParams();
+  const { id: sensorName } = useParams();
   const [chartDataQueryRef, loadChartDataQuery] = useQueryLoader(SensorChartQuery);
 
   const currentDate = React.useContext(ReferenceDateContext);
@@ -113,7 +113,17 @@ const SensorChart = () => {
   const [fromDate, setFromDate] = React.useState(getPastDate(1, 'days', toDate));
 
   const [dateRangeUserDefined, setDateRangeUserDefined] = React.useState(false);
-  const resetDateRange = React.useCallback(() => setDateRangeUserDefined(false), []);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(false);
+
+  const toggleAutoRefresh = React.useCallback((e) => {
+    setAutoRefreshEnabled(e.target.checked);
+  }, []);
+
+  const resetDateRange = React.useCallback(() => {
+    setFromDate(getPastDate(1, 'days', currentDate));
+    setToDate(currentDate);
+    setDateRangeUserDefined(false);
+  }, [currentDate]);
 
   const setStartDate = React.useCallback((value) => {
     setFromDate(value);
@@ -125,25 +135,24 @@ const SensorChart = () => {
     setDateRangeUserDefined(true);
   }, []);
 
-  const sensorName = React.useMemo(
-    () => sensorConfig.find(({ id }) => id === params.id)?.name,
-    [params.id],
+  const submitQuery = React.useCallback(
+    () =>
+      loadChartDataQuery(
+        {
+          sensor: sensorName,
+          fromDate: fromDate.toISOString(),
+          toDate: toDate.toISOString(),
+        },
+        { fetchPolicy: 'network-only' },
+      ),
+    [sensorName, fromDate, toDate, loadChartDataQuery],
   );
 
   React.useEffect(() => {
-    if (!dateRangeUserDefined) {
-      setFromDate(getPastDate(1, 'days', currentDate));
-      setToDate(currentDate);
-    }
-  }, [currentDate, dateRangeUserDefined]);
+    submitQuery();
+  }, [sensorName]);
 
-  React.useEffect(() => {
-    loadChartDataQuery({
-      sensor: params.id,
-      fromDate: fromDate.toISOString(),
-      toDate: toDate.toISOString(),
-    });
-  }, [fromDate, toDate, params.id, loadChartDataQuery]);
+  useInterval(submitQuery, autoRefreshEnabled && !dateRangeUserDefined ? 60000 : null);
 
   return (
     <>
@@ -159,7 +168,7 @@ const SensorChart = () => {
                 onChange={noop}
                 onAccept={setStartDate}
                 inputFormat="dd/MM/yyyy HH:mm"
-                renderInput={(props) => <StyledTextField label="Start date" {...props} />}
+                renderInput={(props) => <StyledTextField {...props} label="Start date" />}
               />
             </Grid>
             <Grid item>
@@ -171,30 +180,43 @@ const SensorChart = () => {
                 onChange={noop}
                 onAccept={setEndDate}
                 inputFormat="dd/MM/yyyy HH:mm"
-                renderInput={(props) => <StyledTextField label="End date" {...props} />}
+                renderInput={(props) => <StyledTextField {...props} label="End date" />}
               />
-            </Grid>
-            <Grid item>
-              <Tooltip title="Reset date range" arrow>
-                <IconButton
-                  size="small"
-                  color="primary"
-                  aria-label="reset date range"
-                  component="span"
-                  disabled={!dateRangeUserDefined}
-                  onClick={resetDateRange}
-                >
-                  <RotateLeftIcon />
-                </IconButton>
-              </Tooltip>
             </Grid>
           </LocalizationProvider>
         </Grid>
-        <Grid item xs={4}>
-          <Typography align="center" variant="h6" paragraph>
-            {sensorName}
-          </Typography>
-        </Grid>
+        <FormControlLabel
+          control={
+            <Switch
+              disabled={dateRangeUserDefined}
+              checked={autoRefreshEnabled}
+              onChange={toggleAutoRefresh}
+            />
+          }
+          label="Auto"
+        />
+        <ButtonGroup disableElevation>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<FindInPageIcon />}
+            aria-label="submit query"
+            onClick={submitQuery}
+          >
+            Search
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            color="secondary"
+            startIcon={<RotateLeftIcon />}
+            aria-label="reset date range"
+            disabled={!dateRangeUserDefined}
+            onClick={resetDateRange}
+          >
+            Reset
+          </Button>
+        </ButtonGroup>
       </Grid>
       <HighchartsProvider Highcharts={Highcharts}>
         <HighchartsChart
@@ -206,22 +228,8 @@ const SensorChart = () => {
           <Legend />
           <XAxis type="datetime" />
           <Navigator />
-          <RangeSelector buttonPosition={{ align: 'right' }}>
-            <RangeSelector.Button count={1} type="day" offsetMin={0} offsetMax={0}>
-              1d
-            </RangeSelector.Button>
-            <RangeSelector.Button count={12} type="hour" offsetMin={0} offsetMax={0}>
-              12h
-            </RangeSelector.Button>
-            <RangeSelector.Button count={6} type="hour" offsetMin={0} offsetMax={0}>
-              6h
-            </RangeSelector.Button>
-            <RangeSelector.Button type="all" offsetMin={0} offsetMax={0}>
-              All
-            </RangeSelector.Button>
-          </RangeSelector>
           <Suspense fallback={<Loading isLoading />}>
-            {chartDataQueryRef && <ChartData queryRef={chartDataQueryRef} />}
+            {chartDataQueryRef !== null ? <ChartData queryRef={chartDataQueryRef} /> : null}
           </Suspense>
         </HighchartsChart>
       </HighchartsProvider>

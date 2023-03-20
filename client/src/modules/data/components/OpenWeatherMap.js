@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { graphql, useQueryLoader, usePreloadedQuery } from 'react-relay';
 import { Grid, Divider } from '@mui/material';
-import calculateTrend from 'lib/calculateTrend';
+import calculateTrendForKeys from 'lib/calculateTrendForKeys';
 import SensorSkeleton from 'modules/app/components/SensorSkeleton';
 import SensorData from 'modules/data/components/SensorData';
 import TrendArrow from 'modules/app/components/TrendArrow';
@@ -15,7 +15,7 @@ const trendKeys = ['temp_c', 'humidity', 'pressure', 'dewpoint'];
 
 const OpenWeatherMapQuery = graphql`
   query OpenWeatherMapQuery($fromDate: DateTime!) {
-    data: search(sensor: OWM, fromDate: $fromDate, sortOrder: desc, limit: 3) {
+    data: search(sensor: OWM, fromDate: $fromDate, sortOrder: desc, limit: 5) {
       dt
       sensor
       icon
@@ -37,7 +37,7 @@ const OpenWeatherMapQuery = graphql`
 const Sensor = ({ title, queryRef }) => {
   const { data } = usePreloadedQuery(OpenWeatherMapQuery, queryRef);
 
-  const trend = React.useMemo(() => calculateTrend(data, trendKeys), [data]);
+  const trend = React.useMemo(() => calculateTrendForKeys(data, trendKeys), [data]);
 
   const {
     dt,

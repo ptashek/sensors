@@ -32,6 +32,10 @@ module.exports = {
 
   externals: [nodeExternals()],
 
+  experiments: {
+    topLevelAwait: true,
+  },
+
   watchOptions: {
     aggregateTimeout: 300,
     poll: 1000,

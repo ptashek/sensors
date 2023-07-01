@@ -1,4 +1,5 @@
 import startOfDay from 'date-fns/startOfDay';
+import addMilliseconds from 'date-fns/addMilliseconds';
 import schema from '../mongoose/schema';
 import * as aggregateFields from './aggregateFields'
 
@@ -53,7 +54,7 @@ export const aggregateResolver = async (args, db) => {
         sensor,
         dt: {
           $gte: startDate,
-          $lte: endDate,
+          $lte: addMilliseconds(endDate, intervalMs)
         },
       },
     },
@@ -61,7 +62,7 @@ export const aggregateResolver = async (args, db) => {
       $group: {
         _id: {
           $floor: {
-            $divide: [{ $subtract: ['$dt', startDate] }, intervalMs],
+            $divide: [{ $subtract: ['$dt', endDate] }, intervalMs],
           },
         },
         sensor: {

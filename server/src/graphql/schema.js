@@ -69,12 +69,12 @@ const SensorDataType = new GraphQLObjectType({
   name: 'SensorData',
   fields: {
     id: {
-      type: GraphQLNonNull(GraphQLID),
+      type: new GraphQLNonNull(GraphQLID),
       resolve: (row) => row._id,
     },
-    sensor: { type: GraphQLNonNull(SensorName) },
-    ts: { type: GraphQLNonNull(GraphQLFloat) },
-    dt: { type: GraphQLNonNull(GraphQLDateTime) },
+    sensor: { type: new GraphQLNonNull(SensorName) },
+    ts: { type: new GraphQLNonNull(GraphQLFloat) },
+    dt: { type: new GraphQLNonNull(GraphQLDateTime) },
     icon: { type: Icon },
     weather_code: { type: GraphQLInt },
     summary: { type: GraphQLString },
@@ -101,11 +101,11 @@ const AggregateDataType = new GraphQLObjectType({
   name: 'AggregateData',
   fields: {
     id: {
-      type: GraphQLNonNull(GraphQLID),
+      type: new GraphQLNonNull(GraphQLID),
       resolve: (row) => row._id,
     },
-    sensor: { type: GraphQLNonNull(SensorName) },
-    dt: { type: GraphQLNonNull(GraphQLDateTime) },
+    sensor: { type: new GraphQLNonNull(SensorName) },
+    dt: { type: new GraphQLNonNull(GraphQLDateTime) },
     temp_c: { type: GraphQLFloat },
     feels_like_c: { type: GraphQLFloat },
     dewpoint: { type: GraphQLFloat },
@@ -129,7 +129,7 @@ const queryType = new GraphQLObjectType({
     search: {
       type: new GraphQLList(SensorDataType),
       args: {
-        sensor: { type: GraphQLNonNull(SensorName) },
+        sensor: { type: new GraphQLNonNull(SensorName) },
         fromDate: { type: GraphQLDateTime },
         toDate: { type: GraphQLDateTime },
         limit: { type: GraphQLInt },
@@ -140,7 +140,7 @@ const queryType = new GraphQLObjectType({
     aggregate: {
       type: new GraphQLList(AggregateDataType),
       args: {
-        sensor: { type: GraphQLNonNull(SensorName) },
+        sensor: { type: new GraphQLNonNull(SensorName) },
         fromDate: { type: GraphQLDateTime },
         toDate: { type: GraphQLDateTime },
         bucketCount: { type: GraphQLInt },

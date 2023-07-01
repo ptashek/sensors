@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import * as express from 'express';
 import compression from 'compression';
-import { graphqlHTTP } from 'express-graphql';
+import { createHandler } from 'graphql-http/lib/use/express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import csp from 'content-security-policy';
@@ -69,7 +69,7 @@ app.use(
       : [csp.SRC_SELF, csp.SRC_USAFE_INLINE, csp.SRC_UNSAFE_EVAL],
   }),
   bodyParser.json(),
-  graphqlHTTP({
+  createHandler({
     schema,
     context: { db: connection },
     graphiql: !IS_PROD,

@@ -1,6 +1,6 @@
 {
   "name": "sensors_server",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "title": "Environment Sensors Server",
   "description": "Environment Sensors Server for IoT sensor data visualisation",
   "main": "src/server.js",
@@ -20,14 +20,14 @@
     "cors": "^2.8.5",
     "date-fns": "^2.29.3",
     "express": "^4.18.0",
-    "express-graphql": "^0.12.0",
+    "graphql-http": "^1.19.0",
     "graphql-scalars": "^1.22.2",
     "mongoose": "^7.3.1",
     "regenerator-runtime": "^0.13.11"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.5",
     "@babel/cli": "^7.22.5",
+    "@babel/core": "^7.22.5",
     "@babel/preset-env": "^7.22.5",
     "babel-loader": "^9.1.2",
     "graphql": "^16.7.1",

@@ -1,6 +1,6 @@
 {
   "name": "sensors",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "Environment Sensors UI",
   "description": "Environment Sensors UI for IoT sensor data visualisation",
   "main": "src/index.js",

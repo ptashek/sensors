@@ -16,7 +16,7 @@ COPY client/babel.config.json /client/
 
 WORKDIR /server
 RUN npm ci --no-fund --no-audit
-RUN npm run prod-build
+RUN npm run build
 
 WORKDIR /client
 RUN npm ci --no-fund --no-audit
@@ -28,7 +28,7 @@ WORKDIR /var/app
 
 COPY --from=base --chown=root:node /server/build .
 COPY --from=base --chown=root:node /server/package*.json .
-RUN npm ci --omit=dev --no-fund --no-audit
+RUN npm ci --omit=dev,optional --no-fund --no-audit
 RUN rm package*.json
 
 FROM node:18-bullseye-slim as final

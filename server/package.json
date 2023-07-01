@@ -5,7 +5,8 @@
   "description": "Environment Sensors Server for IoT sensor data visualisation",
   "main": "src/server.js",
   "scripts": {
-    "prestart": "webpack --config production.webpack.js",
+    "build": "webpack --config production.webpack.js",
+    "prestart": "npm run build",
     "start": "nodemon --watch ./build --ext js ./build/server.js",
     "format": "prettier --config ../.prettierrc.json -u --write src/"
   },

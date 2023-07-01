@@ -40,6 +40,9 @@ function fetchQuery(operation, variables, cacheConfig) {
       }
 
       return json;
+    }).catch((error) => {
+      console.error(error);
+      return error;
     });
 }
 

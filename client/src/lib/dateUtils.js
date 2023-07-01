@@ -1,4 +1,4 @@
-import { subMinutes, subHours, subDays, format } from 'date-fns';
+import { subMinutes, subHours, subDays, format, subWeeks, subMonths } from 'date-fns';
 
 export const getPastDate = (amount, unit, startFrom = new Date()) => {
   switch (unit) {
@@ -13,6 +13,12 @@ export const getPastDate = (amount, unit, startFrom = new Date()) => {
 
     case 'days':
       return subDays(startFrom, amount);
+
+    case 'weeks':
+      return subWeeks(startFrom, amount);
+
+    case 'months':
+      return subMonths(startFrom, amount);
   }
 };
 

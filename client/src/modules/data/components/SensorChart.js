@@ -14,19 +14,18 @@ import {
   Loading,
   Navigator,
   Tooltip as ChartTooltip,
+  RangeSelector,
 } from 'react-jsx-highstock';
 import { styled, useTheme } from '@mui/material/styles';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Grid, Button, ButtonGroup, FormControlLabel, Switch, TextField } from '@mui/material';
-import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import FindInPageIcon from '@mui/icons-material/FindInPage';
 import { getPastDate } from 'lib/dateUtils';
 import ReferenceDateContext from 'modules/app/components/ReferenceDateContext';
 import { useInterval } from '../../../lib/hooks';
-
-const noop = () => null;
 
 const plotOptions = {
   series: {
@@ -63,7 +62,7 @@ const ChartData = ({ queryRef }) => {
         <AreaSeries
           yAxis="left"
           name="Temperature"
-          data={data.map(({ dt, temp_c }) => [new Date(dt), temp_c])}
+          data={data.map(({ dt, temp_c }) => [new Date(dt).getTime(), temp_c])}
           color={theme.palette.colors.plum500}
           tooltip={{
             valueDecimals: 1,
@@ -75,7 +74,7 @@ const ChartData = ({ queryRef }) => {
         <AreaSeries
           yAxis="left"
           name="Apparent"
-          data={data.map(({ dt, feels_like_c }) => [new Date(dt), feels_like_c])}
+          data={data.map(({ dt, feels_like_c }) => [new Date(dt).getTime(), feels_like_c])}
           color={theme.palette.colors.plum200}
           tooltip={{
             valueDecimals: 1,
@@ -90,7 +89,7 @@ const ChartData = ({ queryRef }) => {
         <LineSeries
           yAxis="right"
           name="Humidity"
-          data={data.map(({ dt, humidity }) => [new Date(dt), humidity])}
+          data={data.map(({ dt, humidity }) => [new Date(dt).getTime(), humidity])}
           color={theme.palette.colors.kiwi400}
           tooltip={{
             valueDecimals: 1,
@@ -111,48 +110,43 @@ const SensorChart = () => {
   const currentDate = React.useContext(ReferenceDateContext);
   const [toDate, setToDate] = React.useState(currentDate);
   const [fromDate, setFromDate] = React.useState(getPastDate(1, 'days', toDate));
-
-  const [dateRangeUserDefined, setDateRangeUserDefined] = React.useState(false);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(false);
+
+  const submitQuery = () =>
+    loadChartDataQuery(
+      {
+        sensor: sensorName,
+        fromDate: fromDate.toISOString(),
+        toDate: toDate.toISOString(),
+      },
+      { fetchPolicy: 'network-only' },
+    );
+
+  const autoRefreshData = () => {
+    if (autoRefreshEnabled) {
+      setToDate(currentDate);
+      setFromDate(getPastDate(1, 'days', currentDate));
+      submitQuery();
+    }
+  };
 
   const toggleAutoRefresh = React.useCallback((e) => {
     setAutoRefreshEnabled(e.target.checked);
   }, []);
 
-  const resetDateRange = React.useCallback(() => {
-    setFromDate(getPastDate(1, 'days', currentDate));
-    setToDate(currentDate);
-    setDateRangeUserDefined(false);
-  }, [currentDate]);
-
   const setStartDate = React.useCallback((value) => {
     setFromDate(value);
-    setDateRangeUserDefined(true);
   }, []);
 
   const setEndDate = React.useCallback((value) => {
     setToDate(value);
-    setDateRangeUserDefined(true);
   }, []);
-
-  const submitQuery = React.useCallback(
-    () =>
-      loadChartDataQuery(
-        {
-          sensor: sensorName,
-          fromDate: fromDate.toISOString(),
-          toDate: toDate.toISOString(),
-        },
-        { fetchPolicy: 'network-only' },
-      ),
-    [sensorName, fromDate, toDate, loadChartDataQuery],
-  );
 
   React.useEffect(() => {
     submitQuery();
   }, [sensorName]);
 
-  useInterval(submitQuery, autoRefreshEnabled && !dateRangeUserDefined ? 60000 : null);
+  useInterval(autoRefreshData, autoRefreshEnabled ? 60000 : null);
 
   return (
     <>
@@ -161,62 +155,78 @@ const SensorChart = () => {
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Grid item>
               <DateTimePicker
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
+                slotProps={{ textField: { size: 'small' } }}
+                disabled={autoRefreshEnabled}
                 reduceAnimations={true}
                 disableFuture={true}
                 ampm={false}
                 value={fromDate}
-                onChange={noop}
-                onAccept={setStartDate}
+                onChange={setStartDate}
                 inputFormat="dd/MM/yyyy HH:mm"
                 renderInput={(props) => <StyledTextField {...props} label="Start date" />}
               />
             </Grid>
             <Grid item>
               <DateTimePicker
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
+                slotProps={{ textField: { size: 'small' } }}
+                disabled={autoRefreshEnabled}
                 reduceAnimations={true}
                 disableFuture={true}
                 ampm={false}
                 value={toDate}
-                onChange={noop}
-                onAccept={setEndDate}
+                onChange={setEndDate}
                 inputFormat="dd/MM/yyyy HH:mm"
                 renderInput={(props) => <StyledTextField {...props} label="End date" />}
               />
             </Grid>
           </LocalizationProvider>
+          <Grid item>
+            <ButtonGroup disableElevation={true}>
+              <Button
+                disabled={autoRefreshEnabled}
+                aria-label="set start date to 1 month ago"
+                onClick={() => setStartDate(getPastDate(1, 'months', toDate))}
+              >
+                30d
+              </Button>
+              <Button
+                disabled={autoRefreshEnabled}
+                aria-label="set start date to 1 week ago"
+                onClick={() => setStartDate(getPastDate(1, 'weeks', toDate))}
+              >
+                7d
+              </Button>
+              <Button
+                disabled={autoRefreshEnabled}
+                aria-label="set start date to 1 day ago"
+                onClick={() => setStartDate(getPastDate(1, 'days', toDate))}
+              >
+                1d
+              </Button>
+              <Button
+                disabled={autoRefreshEnabled}
+                variant="contained"
+                endIcon={<FindInPageIcon />}
+                aria-label="submit query"
+                onClick={submitQuery}
+              >
+                Search
+              </Button>
+            </ButtonGroup>
+          </Grid>
         </Grid>
         <FormControlLabel
-          control={
-            <Switch
-              disabled={dateRangeUserDefined}
-              checked={autoRefreshEnabled}
-              onChange={toggleAutoRefresh}
-            />
-          }
-          label="Auto"
+          control={<Switch checked={autoRefreshEnabled} onChange={toggleAutoRefresh} />}
+          label="Auto refresh"
         />
-        <ButtonGroup disableElevation>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<FindInPageIcon />}
-            aria-label="submit query"
-            onClick={submitQuery}
-          >
-            Search
-          </Button>
-          <Button
-            variant="contained"
-            size="small"
-            color="secondary"
-            startIcon={<RotateLeftIcon />}
-            aria-label="reset date range"
-            disabled={!dateRangeUserDefined}
-            onClick={resetDateRange}
-          >
-            Reset
-          </Button>
-        </ButtonGroup>
       </Grid>
       <HighchartsProvider Highcharts={Highcharts}>
         <HighchartsChart
@@ -228,6 +238,9 @@ const SensorChart = () => {
           <Legend />
           <XAxis type="datetime" />
           <Navigator />
+          <RangeSelector>
+            <RangeSelector.Button type="all">All</RangeSelector.Button>
+          </RangeSelector>
           <Suspense fallback={<Loading isLoading />}>
             {chartDataQueryRef !== null ? <ChartData queryRef={chartDataQueryRef} /> : null}
           </Suspense>
